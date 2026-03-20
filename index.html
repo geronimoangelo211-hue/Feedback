@@ -187,6 +187,8 @@
     <script>
         const form = document.getElementById('feedbackForm');
         const successMessage = document.getElementById('successMessage');
+        
+        // This MUST be your active Ngrok URL for the Java server to receive the data
         const BACKEND_URL = 'https://unoriginally-cnidogenous-josh.ngrok-free.dev/api/feedback/submit';
 
         form.addEventListener('submit', async function(event) {
@@ -212,7 +214,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'ngrok-skip-browser-warning': 'true' 
+                        'ngrok-skip-browser-warning': 'true' // Bypasses the Ngrok warning screen
                     },
                     body: JSON.stringify(feedbackData)
                 });
@@ -224,6 +226,7 @@
                     alert("Server error. Please try again.");
                 }
             } catch (error) {
+                console.error('Error:', error);
                 alert("Cannot connect to server. Is Ngrok and Java running?");
             }
         });
