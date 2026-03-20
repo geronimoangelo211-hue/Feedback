@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Natnat's Feedback System</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f3f4f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .feedback-container {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 500px;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .feedback-container h2 {
+            margin-bottom: 10px;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .feedback-container p {
+            color: #6b7280;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 15px;
+        }
+
+        .rating-group {
+            display: flex;
+            justify-content: center;
+            flex-direction: row-reverse; 
+            margin-bottom: 20px;
+        }
+
+        .rating-group input {
+            display: none; 
+        }
+
+        .rating-group label {
+            font-size: 40px;
+            color: #d1d5db;
+            cursor: pointer;
+            padding: 0 5px;
+            transition: color 0.2s ease;
+        }
+
+        .rating-group input:checked ~ label,
+        .rating-group label:hover,
+        .rating-group label:hover ~ label {
+            color: #fbbf24; 
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 15px;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        button {
+            width: 100%;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #2563eb;
+        }
+
+        .success-message {
+            display: none;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .success-message h3 {
+            color: #10b981;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .feedback-container {
+                padding: 25px 20px;
+            }
+            .rating-group label {
+                font-size: 35px; 
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="feedback-container">
+        <form id="feedbackForm">
+            <h2>Natnat's Feedback System</h2>
+            <p>Let us know how we did today.</p>
+
+            <div class="form-group">
+                <label for="name">Your Name:</label>
+                <input type="text" id="name" name="name" placeholder="Enter your name" required>
+            </div>
+
+            <label style="display: block; text-align: center; font-weight: 600; font-size: 14px; margin-bottom: 8px;">Your Rating:</label>
+            <div class="rating-group">
+                <input type="radio" id="star5" name="rating" value="5" required />
+                <label for="star5">★</label>
+                
+                <input type="radio" id="star4" name="rating" value="4" />
+                <label for="star4">★</label>
+                
+                <input type="radio" id="star3" name="rating" value="3" />
+                <label for="star3">★</label>
+                
+                <input type="radio" id="star2" name="rating" value="2" />
+                <label for="star2">★</label>
+                
+                <input type="radio" id="star1" name="rating" value="1" />
+                <label for="star1">★</label>
+            </div>
+
+            <div class="form-group">
+                <label for="message">Your Message:</label>
+                <textarea id="message" name="message" placeholder="Tell us what you think..." required></textarea>
+            </div>
+
+            <button type="submit">Submit Feedback</button>
+        </form>
+
+        <div id="successMessage" class="success-message">
+            <h3>Thank You!</h3>
+            <p>Your feedback has been successfully submitted.</p>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('feedbackForm');
+        const successMessage = document.getElementById('successMessage');
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(form);
+            const name = formData.get('name');
+            const rating = parseInt(formData.get('rating'));
+            const message = formData.get('message');
+
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-US') + ' ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+            let feedbackHistory = JSON.parse(localStorage.getItem('ims_feedback_history')) || [];
+
+            feedbackHistory.push({
+                id: Date.now(),
+                date: dateStr,
+                name: name,
+                rating: rating,
+                message: message
+            });
+
+            localStorage.setItem('ims_feedback_history', JSON.stringify(feedbackHistory));
+
+            form.style.display = 'none';
+            successMessage.style.display = 'block';
+        });
+    </script>
+</body>
+</html>
