@@ -187,6 +187,7 @@
     <script>
         const form = document.getElementById('feedbackForm');
         const successMessage = document.getElementById('successMessage');
+        const BACKEND_URL = 'https://YOUR-NGROK-URL-HERE.ngrok-free.app/api/feedback/submit';
 
         form.addEventListener('submit', async function(event) {
             event.preventDefault();
@@ -199,7 +200,6 @@
             const now = new Date();
             const dateStr = now.toLocaleDateString('en-US') + ' ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
-            // Create the data object exactly how Java expects it
             const feedbackData = {
                 name: name,
                 rating: rating,
@@ -208,11 +208,11 @@
             };
 
             try {
-                // Send it to your Java Backend
-                const response = await fetch('http://localhost:8080/api/feedback/submit', {
+                const response = await fetch(BACKEND_URL, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true' 
                     },
                     body: JSON.stringify(feedbackData)
                 });
@@ -224,8 +224,7 @@
                     alert("Server error. Please try again.");
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert("Cannot connect to server. Is your Java backend running?");
+                alert("Cannot connect to server. Is Ngrok and Java running?");
             }
         });
     </script>
