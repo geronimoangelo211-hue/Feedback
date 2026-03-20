@@ -188,7 +188,7 @@
         const form = document.getElementById('feedbackForm');
         const successMessage = document.getElementById('successMessage');
 
-        form.addEventListener('submit', function(event) {
+        form.addEventListener('submit', async function(event) {
             event.preventDefault();
 
             const formData = new FormData(form);
@@ -199,20 +199,34 @@
             const now = new Date();
             const dateStr = now.toLocaleDateString('en-US') + ' ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
-            let feedbackHistory = JSON.parse(localStorage.getItem('ims_feedback_history')) || [];
-
-            feedbackHistory.push({
-                id: Date.now(),
-                date: dateStr,
+            // Create the data object exactly how Java expects it
+            const feedbackData = {
                 name: name,
                 rating: rating,
-                message: message
-            });
+                message: message,
+                date: dateStr
+            };
 
-            localStorage.setItem('ims_feedback_history', JSON.stringify(feedbackHistory));
+            try {
+                // Send it to your Java Backend
+                const response = await fetch('http://localhost:8080/api/feedback/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(feedbackData)
+                });
 
-            form.style.display = 'none';
-            successMessage.style.display = 'block';
+                if (response.ok) {
+                    form.style.display = 'none';
+                    successMessage.style.display = 'block';
+                } else {
+                    alert("Server error. Please try again.");
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert("Cannot connect to server. Is your Java backend running?");
+            }
         });
     </script>
 </body>
