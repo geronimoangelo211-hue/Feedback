@@ -129,42 +129,103 @@
             border-color: #111111;
             box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.2);
         }
-        .captcha-wrapper {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: stretch;
-            gap: 10px;
+        .slider-captcha-wrapper {
+            position: relative;
+            width: 100%;
             margin-bottom: 10px;
-        }
-        #captchaCanvas {
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            background-color: #e5e7eb;
-            letter-spacing: 5px;
-            flex-grow: 1;
-            max-width: 100%;
-            height: 70px;
             touch-action: none;
         }
-        .refresh-btn {
-            background-color: #f3f4f6;
-            color: #374151;
-            border: 1px solid #d1d5db;
-            padding: 0 20px;
-            font-size: 24px;
+        .slider-puzzle-container {
+            position: relative;
+            width: 100%;
+            height: 150px;
             border-radius: 8px;
-            cursor: pointer;
-            transition: 0.2s;
-            min-height: 50px;
-            flex-shrink: 0;
+            overflow: hidden;
+            background-color: #e5e7eb;
+            margin-bottom: 15px;
+        }
+        #captchaBg {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        #captchaPiece {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2;
+            cursor: grab;
+        }
+        .captcha-refresh {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            -webkit-tap-highlight-color: transparent;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 3;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+            user-select: none;
         }
-        .refresh-btn:hover, 
-        .refresh-btn:active {
-            background-color: #e5e7eb;
+        .captcha-refresh:active {
+            transform: rotate(180deg);
+        }
+        .slider-control {
+            position: relative;
+            width: 100%;
+            height: 44px;
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .slider-track-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+            user-select: none;
+            pointer-events: none;
+        }
+        .slider-fill {
+            position: absolute;
+            height: 100%;
+            width: 0;
+            background: #dbeafe;
+            border-radius: 22px 0 0 22px;
+            z-index: 1;
+        }
+        .slider-thumb {
+            position: absolute;
+            top: -1px;
+            left: 0;
+            width: 46px;
+            height: 46px;
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            cursor: grab;
+            z-index: 2;
+            color: #3b82f6;
+            font-size: 18px;
+            user-select: none;
+        }
+        .slider-thumb:active {
+            cursor: grabbing;
         }
         #captchaError {
             color: #ef4444;
@@ -228,13 +289,6 @@
                 width: 70px;
                 height: 70px;
             }
-            .captcha-wrapper {
-                flex-direction: column;
-            }
-            .refresh-btn {
-                padding: 12px;
-                width: 100%;
-            }
         }
     </style>
 </head>
@@ -278,13 +332,20 @@
             </div>
 
             <div class="form-group">
-                <label for="captchaInput">Verify you are human (Case Sensitive):</label>
-                <div class="captcha-wrapper">
-                    <canvas id="captchaCanvas"></canvas>
-                    <button type="button" id="refreshCaptcha" class="refresh-btn" title="Refresh CAPTCHA">↻</button>
+                <label>Verify you are human:</label>
+                <div class="slider-captcha-wrapper" id="sliderCaptchaWrapper">
+                    <div class="slider-puzzle-container">
+                        <canvas id="captchaBg"></canvas>
+                        <canvas id="captchaPiece"></canvas>
+                        <div class="captcha-refresh" id="refreshCaptcha">↻</div>
+                    </div>
+                    <div class="slider-control" id="sliderControl">
+                        <div class="slider-track-text" id="sliderTrackText">Slide to complete the puzzle</div>
+                        <div class="slider-fill" id="sliderFill"></div>
+                        <div class="slider-thumb" id="sliderThumb">➔</div>
+                    </div>
                 </div>
-                <input type="text" id="captchaInput" placeholder="Type the text exactly as shown" required autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-                <div id="captchaError">Incorrect CAPTCHA. Please try again.</div>
+                <div id="captchaError">Puzzle failed. Please try again.</div>
             </div>
 
             <button type="submit">Submit Feedback</button>
@@ -337,7 +398,6 @@
                 const input = document.getElementById(inputId);
                 updateReactionImage(input.value);
             });
-            
             label.addEventListener('touchstart', () => {
                 const inputId = label.getAttribute('for');
                 const input = document.getElementById(inputId);
@@ -361,7 +421,6 @@
         });
 
         const COOLDOWN_MS = 24 * 60 * 60 * 1000;
-        let currentCaptchaString = "";
 
         function checkCooldown() {
             const lastSubmit = localStorage.getItem('natnat_feedback_last_submit');
@@ -370,7 +429,6 @@
                 if (timeSinceSubmit < COOLDOWN_MS) {
                     form.style.display = 'none';
                     cooldownMessage.style.display = 'block';
-
                     const remainingMs = COOLDOWN_MS - timeSinceSubmit;
                     const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
                     const remainingMins = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
@@ -381,98 +439,261 @@
             return false;
         }
 
-        function generateCaptcha() {
-            const canvas = document.getElementById('captchaCanvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const dpr = window.devicePixelRatio || 1;
-            const rect = canvas.getBoundingClientRect();
-            const logicalWidth = rect.width > 0 ? rect.width : 240;
-            const logicalHeight = 70;
+        let isCaptchaSolved = false;
+        let puzzleX = 0;
+        let puzzleY = 0;
+        let isDragging = false;
+        let startX = 0;
+        const l = 42; 
+        const r = 9;  
 
-            canvas.width = logicalWidth * dpr;
-            canvas.height = logicalHeight * dpr;
-            ctx.scale(dpr, dpr);
-            ctx.clearRect(0, 0, logicalWidth, logicalHeight);
-            ctx.fillStyle = '#f3f4f6';
-            ctx.fillRect(0, 0, logicalWidth, logicalHeight);
+        const bgCanvas = document.getElementById('captchaBg');
+        const pieceCanvas = document.getElementById('captchaPiece');
+        const bgCtx = bgCanvas.getContext('2d');
+        const pieceCtx = pieceCanvas.getContext('2d');
+        const thumb = document.getElementById('sliderThumb');
+        const fill = document.getElementById('sliderFill');
+        const wrapper = document.getElementById('sliderCaptchaWrapper');
+        const errorMsg = document.getElementById('captchaError');
+        const trackText = document.getElementById('sliderTrackText');
 
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#$%&';
-            currentCaptchaString = '';
+        function drawAbstractBackground(ctx, w, h) {
+            let grad = ctx.createLinearGradient(0, 0, w, h);
+            grad.addColorStop(0, '#6ee7b7');
+            grad.addColorStop(0.5, '#3b82f6');
+            grad.addColorStop(1, '#9333ea');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, w, h);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.beginPath(); ctx.arc(w * 0.2, h * 0.3, 40, 0, 2 * Math.PI); ctx.fill();
+            ctx.beginPath(); ctx.arc(w * 0.8, h * 0.7, 60, 0, 2 * Math.PI); ctx.fill();
+            ctx.beginPath(); ctx.arc(w * 0.5, h * 0.9, 30, 0, 2 * Math.PI); ctx.fill();
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.beginPath(); ctx.arc(w * 0.7, h * 0.2, 50, 0, 2 * Math.PI); ctx.fill();
+            ctx.beginPath(); ctx.arc(w * 0.1, h * 0.8, 45, 0, 2 * Math.PI); ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 1;
+            for(let i=0; i<w; i+=30) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, h); ctx.stroke(); }
+            for(let i=0; i<h; i+=30) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(w, i); ctx.stroke(); }
+        }
 
-            for (let i = 0; i < 6; i++) {
-                currentCaptchaString += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
+        function drawPuzzlePath(ctx, x, y, l, r) {
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + l / 2 - r, y);
+            ctx.arc(x + l / 2, y, r, Math.PI, 0, false);
+            ctx.lineTo(x + l, y);
+            ctx.lineTo(x + l, y + l / 2 - r);
+            ctx.arc(x + l, y + l / 2, r, 1.5 * Math.PI, 0.5 * Math.PI, false);
+            ctx.lineTo(x + l, y + l);
+            ctx.lineTo(x + l / 2 + r, y + l);
+            ctx.arc(x + l / 2, y + l, r, 0, Math.PI, true);
+            ctx.lineTo(x, y + l);
+            ctx.lineTo(x, y + l / 2 + r);
+            ctx.arc(x, y + l / 2, r, 0.5 * Math.PI, 1.5 * Math.PI, true);
+            ctx.closePath();
+        }
 
-            for (let i = 0; i < 35; i++) {
-                ctx.beginPath();
-                ctx.moveTo(Math.random() * logicalWidth, Math.random() * logicalHeight);
-                ctx.lineTo(Math.random() * logicalWidth, Math.random() * logicalHeight);
-                ctx.strokeStyle = `rgba(${Math.random()*255}, ${Math.random()*255}, ${Math.random()*255}, 0.7)`;
-                ctx.lineWidth = Math.random() * 3;
-                ctx.stroke();
-            }
+        function initSliderCaptcha() {
+            isCaptchaSolved = false;
+            errorMsg.style.display = 'none';
+            thumb.style.transition = 'none';
+            fill.style.transition = 'none';
+            pieceCanvas.style.transition = 'none';
+            thumb.style.transform = `translateX(0px)`;
+            fill.style.width = `0px`;
+            pieceCanvas.style.transform = `translateX(0px)`;
+            thumb.innerHTML = '➔';
+            thumb.style.backgroundColor = '#ffffff';
+            thumb.style.color = '#3b82f6';
+            fill.style.backgroundColor = '#dbeafe';
+            trackText.style.display = 'block';
 
-            for (let i = 0; i < 200; i++) {
-                ctx.beginPath();
-                ctx.arc(Math.random() * logicalWidth, Math.random() * logicalHeight, Math.random() * 2, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(${Math.random()*255}, ${Math.random()*255}, ${Math.random()*255}, 0.6)`;
-                ctx.fill();
-            }
+            const width = wrapper.clientWidth || 420; 
+            const height = 150;
+            bgCanvas.width = width;
+            bgCanvas.height = height;
 
-            const totalSpacing = logicalWidth - 40;
-            const charSpacing = totalSpacing / 6;
+            const sliderTargetX = Math.random() * (width - l - r*2 - 50) + 50; 
+            puzzleX = sliderTargetX;
+            puzzleY = Math.random() * (height - l - r*2) + r; 
 
-            for (let i = 0; i < currentCaptchaString.length; i++) {
-                ctx.save();
-                const x = 20 + (i * charSpacing) + (Math.random() * 10 - 5);
-                const y = 45 + (Math.random() * 10 - 5);
-                ctx.translate(x, y);
-                const angle = (Math.random() - 0.5) * Math.PI / 2;
-                ctx.rotate(angle);
-                const fontSize = 24 + Math.random() * 10;
-                const fonts = ['Georgia', 'Courier New', 'Impact', 'Times New Roman'];
-                const font = fonts[Math.floor(Math.random() * fonts.length)];
-                ctx.font = `bold ${fontSize}px ${font}`;
-                ctx.fillStyle = `rgb(${Math.random()*120}, ${Math.random()*120}, ${Math.random()*120})`;
-                ctx.shadowColor = "rgba(0,0,0,0.4)";
-                ctx.shadowBlur = 3;
-                ctx.fillText(currentCaptchaString[i], -10, 0);
-                ctx.restore();
+            bgCtx.fillStyle = '#e5e7eb';
+            bgCtx.fillRect(0, 0, width, height);
+            bgCtx.fillStyle = '#9ca3af';
+            bgCtx.font = '14px Arial';
+            bgCtx.fillText('Loading puzzle...', width/2 - 45, height/2);
+            pieceCtx.clearRect(0,0, pieceCanvas.width, pieceCanvas.height);
+
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.src = `https://picsum.photos/${Math.floor(width)}/${Math.floor(height)}?random=${Math.random()}`;
+            
+            img.onload = () => {
+                bgCtx.clearRect(0, 0, width, height);
+                bgCtx.drawImage(img, 0, 0, width, height);
+
+                bgCtx.save();
+                drawPuzzlePath(bgCtx, sliderTargetX + r, puzzleY, l, r);
+                bgCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                bgCtx.fill();
+                bgCtx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+                bgCtx.lineWidth = 2;
+                bgCtx.stroke();
+                bgCtx.restore();
+
+                pieceCanvas.width = l + r * 2;
+                pieceCanvas.height = l + r * 2;
+                pieceCanvas.style.top = `${puzzleY - r}px`;
+                pieceCanvas.style.left = `0px`;
+
+                pieceCtx.clearRect(0,0, pieceCanvas.width, pieceCanvas.height);
+                pieceCtx.save();
+                drawPuzzlePath(pieceCtx, r, r, l, r);
+                pieceCtx.clip();
+                pieceCtx.drawImage(img, sliderTargetX, puzzleY - r, pieceCanvas.width, pieceCanvas.height, 0, 0, pieceCanvas.width, pieceCanvas.height);
+                pieceCtx.restore();
+
+                pieceCtx.save();
+                drawPuzzlePath(pieceCtx, r, r, l, r);
+                pieceCtx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+                pieceCtx.lineWidth = 2;
+                pieceCtx.stroke();
+                pieceCtx.restore();
+            };
+
+            img.onerror = () => {
+                drawAbstractBackground(bgCtx, width, height);
+                const offscreen = document.createElement('canvas');
+                offscreen.width = width; 
+                offscreen.height = height;
+                drawAbstractBackground(offscreen.getContext('2d'), width, height);
+                
+                bgCtx.save();
+                drawPuzzlePath(bgCtx, sliderTargetX + r, puzzleY, l, r);
+                bgCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                bgCtx.fill();
+                bgCtx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+                bgCtx.lineWidth = 2;
+                bgCtx.stroke();
+                bgCtx.restore();
+
+                pieceCanvas.width = l + r * 2;
+                pieceCanvas.height = l + r * 2;
+                pieceCanvas.style.top = `${puzzleY - r}px`;
+                pieceCanvas.style.left = `0px`;
+
+                pieceCtx.clearRect(0,0, pieceCanvas.width, pieceCanvas.height);
+                pieceCtx.save();
+                drawPuzzlePath(pieceCtx, r, r, l, r);
+                pieceCtx.clip();
+                pieceCtx.drawImage(offscreen, sliderTargetX, puzzleY - r, pieceCanvas.width, pieceCanvas.height, 0, 0, pieceCanvas.width, pieceCanvas.height);
+                pieceCtx.restore();
+
+                pieceCtx.save();
+                drawPuzzlePath(pieceCtx, r, r, l, r);
+                pieceCtx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+                pieceCtx.lineWidth = 2;
+                pieceCtx.stroke();
+                pieceCtx.restore();
+            };
+        }
+
+        function onDragStart(e) {
+            if (isCaptchaSolved) return;
+            isDragging = true;
+            startX = e.clientX || e.touches[0].clientX;
+            thumb.style.transition = 'none';
+            fill.style.transition = 'none';
+            pieceCanvas.style.transition = 'none';
+            trackText.style.display = 'none';
+        }
+
+        function onDragMove(e) {
+            if (!isDragging) return;
+            e.preventDefault(); 
+            let currentX = e.clientX || e.touches[0].clientX;
+            let moveX = currentX - startX;
+            const maxMove = wrapper.clientWidth - 46;
+            
+            if (moveX < 0) moveX = 0;
+            if (moveX > maxMove) moveX = maxMove;
+
+            thumb.style.transform = `translateX(${moveX}px)`;
+            fill.style.width = `${moveX + 23}px`;
+            pieceCanvas.style.transform = `translateX(${moveX}px)`;
+        }
+
+        function onDragEnd(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            let currentX = e.clientX || (e.changedTouches ? e.changedTouches[0].clientX : startX);
+            let moveX = currentX - startX;
+            const maxMove = wrapper.clientWidth - 46;
+            
+            if (moveX < 0) moveX = 0;
+            if (moveX > maxMove) moveX = maxMove;
+
+            if (Math.abs(moveX - puzzleX) < 8) {
+                isCaptchaSolved = true;
+                thumb.innerHTML = '✔';
+                thumb.style.backgroundColor = '#10b981';
+                thumb.style.color = 'white';
+                fill.style.backgroundColor = '#d1fae5';
+                errorMsg.style.display = 'none';
+                thumb.style.transform = `translateX(${puzzleX}px)`;
+                pieceCanvas.style.transform = `translateX(${puzzleX}px)`;
+                fill.style.width = `${puzzleX + 23}px`;
+            } else {
+                thumb.style.transition = 'transform 0.3s ease';
+                fill.style.transition = 'width 0.3s ease';
+                pieceCanvas.style.transition = 'transform 0.3s ease';
+                thumb.style.transform = `translateX(0px)`;
+                fill.style.width = `0px`;
+                pieceCanvas.style.transform = `translateX(0px)`;
+                errorMsg.style.display = 'block';
+                trackText.style.display = 'block';
+                setTimeout(() => {
+                    initSliderCaptcha();
+                }, 500);
             }
         }
 
+        thumb.addEventListener('mousedown', onDragStart);
+        thumb.addEventListener('touchstart', onDragStart, {passive: true});
+        window.addEventListener('mousemove', onDragMove, {passive: false});
+        window.addEventListener('touchmove', onDragMove, {passive: false});
+        window.addEventListener('mouseup', onDragEnd);
+        window.addEventListener('touchend', onDragEnd);
+
         window.addEventListener('load', () => {
             if (!checkCooldown()) {
-                generateCaptcha();
+                setTimeout(initSliderCaptcha, 100);
             }
         });
 
         window.addEventListener('resize', () => {
-            if (form.style.display !== 'none') {
-                setTimeout(generateCaptcha, 100);
+            if (form.style.display !== 'none' && !isCaptchaSolved) {
+                setTimeout(initSliderCaptcha, 100);
             }
         });
 
         document.getElementById('refreshCaptcha').addEventListener('click', () => {
-            generateCaptcha();
-            document.getElementById('captchaInput').value = '';
-            document.getElementById('captchaError').style.display = 'none';
+            if(!isCaptchaSolved) {
+                initSliderCaptcha();
+            }
         });
 
         form.addEventListener('submit', async function(event) {
             event.preventDefault();
 
-            const userInput = document.getElementById('captchaInput').value;
-            if (userInput !== currentCaptchaString) {
-                document.getElementById('captchaError').style.display = 'block';
-                generateCaptcha();
-                document.getElementById('captchaInput').value = '';
-                document.getElementById('captchaInput').focus();
+            if (!isCaptchaSolved) {
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = "Please complete the puzzle first.";
                 return;
             }
 
-            document.getElementById('captchaError').style.display = 'none';
+            errorMsg.style.display = 'none';
 
             const formData = new FormData(form);
             const name = formData.get('name');
@@ -511,7 +732,7 @@
                     successMessage.style.display = 'block';
                     localStorage.setItem('natnat_feedback_last_submit', Date.now().toString());
                 } else {
-                    generateCaptcha();
+                    initSliderCaptcha();
                 }
             } catch (error) {
             }
