@@ -708,9 +708,13 @@
             }
         });
 
+        let lastWindowWidth = window.innerWidth;
         window.addEventListener('resize', () => {
-            if (form.style.display !== 'none' && !isCaptchaSolved) {
-                setTimeout(initSliderCaptcha, 100);
+            if (window.innerWidth !== lastWindowWidth) {
+                lastWindowWidth = window.innerWidth;
+                if (form.style.display !== 'none' && !isCaptchaSolved) {
+                    setTimeout(initSliderCaptcha, 100);
+                }
             }
         });
 
