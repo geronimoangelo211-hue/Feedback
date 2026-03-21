@@ -31,6 +31,24 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        @keyframes idleLogo {
+            0% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-8px) scale(1.03); }
+            100% { transform: translateY(0) scale(1); }
+        }
+
+        .logo-container img {
+            max-width: 180px;
+            height: auto;
+            object-fit: contain;
+            animation: idleLogo 4s ease-in-out infinite;
+        }
+
         .feedback-container h2 {
             margin-bottom: 10px;
             font-size: 24px;
@@ -44,30 +62,53 @@
             font-size: 15px;
         }
 
+        .rating-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 25px;
+            min-height: 80px;
+        }
+
         .rating-group {
             display: flex;
             justify-content: center;
-            flex-direction: row-reverse; 
-            margin-bottom: 20px;
+            flex-direction: row-reverse;
         }
 
         .rating-group input {
-            display: none; 
+            display: none;
         }
 
         .rating-group label {
-            font-size: 40px;
+            font-size: 45px;
             color: #d1d5db;
             cursor: pointer;
             padding: 0 5px;
-            transition: color 0.2s ease;
-            -webkit-tap-highlight-color: transparent; /* Removes blue tap flash on mobile */
+            transition: color 0.2s ease, transform 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .rating-group label:hover {
+            transform: scale(1.1);
         }
 
         .rating-group input:checked ~ label,
         .rating-group label:hover,
         .rating-group label:hover ~ label {
-            color: #fbbf24; 
+            color: #fbbf24;
+        }
+
+        .reaction-image {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #f3f4f6;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: none;
+            transition: opacity 0.3s ease;
         }
 
         .form-group {
@@ -88,9 +129,9 @@
             border: 1px solid #d1d5db;
             border-radius: 8px;
             font-family: inherit;
-            font-size: 16px; /* CRITICAL for mobile: Must be 16px to prevent iOS auto-zoom */
+            font-size: 16px;
         }
-        
+
         textarea {
             resize: vertical;
             min-height: 100px;
@@ -99,14 +140,13 @@
         input[type="text"]:focus,
         textarea:focus {
             outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            border-color: #111111;
+            box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.2);
         }
 
-        /* --- Mobile-Optimized CAPTCHA Styles --- */
         .captcha-wrapper {
             display: flex;
-            flex-wrap: wrap; /* Allows stacking on very small screens */
+            flex-wrap: wrap;
             align-items: stretch;
             gap: 10px;
             margin-bottom: 10px;
@@ -117,10 +157,10 @@
             border-radius: 8px;
             background-color: #e5e7eb;
             letter-spacing: 5px;
-            flex-grow: 1; /* Takes up available space */
+            flex-grow: 1;
             max-width: 100%;
-            height: 70px; /* Fixed height, fluid width */
-            touch-action: none; /* Prevents accidental scrolling when touching canvas */
+            height: 70px;
+            touch-action: none;
         }
 
         .refresh-btn {
@@ -132,7 +172,7 @@
             border-radius: 8px;
             cursor: pointer;
             transition: 0.2s;
-            min-height: 50px; /* Large touch target for mobile */
+            min-height: 50px;
             flex-shrink: 0;
             display: flex;
             align-items: center;
@@ -140,7 +180,8 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        .refresh-btn:hover, .refresh-btn:active {
+        .refresh-btn:hover, 
+        .refresh-btn:active {
             background-color: #e5e7eb;
         }
 
@@ -150,14 +191,13 @@
             margin-top: 5px;
             display: none;
         }
-        /* --------------------------------------- */
 
         button[type="submit"] {
             width: 100%;
-            background-color: #3b82f6;
+            background-color: #111111;
             color: white;
             border: none;
-            padding: 16px; /* Slightly larger for easier tapping */
+            padding: 16px;
             font-size: 16px;
             font-weight: 600;
             border-radius: 8px;
@@ -168,10 +208,10 @@
         }
 
         button[type="submit"]:hover {
-            background-color: #2563eb;
+            background-color: #333333;
         }
 
-        .success-message {
+        .success-message, .cooldown-message {
             display: none;
             text-align: center;
             padding: 20px 0;
@@ -182,20 +222,24 @@
             margin-bottom: 10px;
         }
 
-        /* Mobile specific media query adjustments */
+        .cooldown-message h3 {
+            color: #f59e0b;
+            margin-bottom: 10px;
+        }
+
         @media (max-width: 480px) {
             .feedback-container {
                 padding: 25px 20px;
             }
             .rating-group label {
-                font-size: 45px; /* Larger stars for easier tapping */
+                font-size: 45px;
             }
             .captcha-wrapper {
-                flex-direction: column; /* Stack canvas and button vertically on tiny screens */
+                flex-direction: column;
             }
             .refresh-btn {
                 padding: 12px;
-                width: 100%; /* Full width button on mobile */
+                width: 100%;
             }
         }
     </style>
@@ -203,31 +247,35 @@
 <body>
 
     <div class="feedback-container">
+        <div class="logo-container">
+            <img src="Images/Logo.png" alt="Company Logo">
+        </div>
+
         <form id="feedbackForm">
-            <h2>Natnat's Feedback System</h2>
+            <h2>Thank you and Provide some Feedback.</h2>
             <p>Let us know how we did today.</p>
+
+            <label style="display: block; text-align: center; font-weight: 600; font-size: 14px; margin-bottom: 8px;">Your Rating:</label>
+            
+            <div class="rating-wrapper">
+                <div class="rating-group" id="rating-group">
+                    <input type="radio" id="star5" name="rating" value="5" required />
+                    <label for="star5">★</label>
+                    <input type="radio" id="star4" name="rating" value="4" />
+                    <label for="star4">★</label>
+                    <input type="radio" id="star3" name="rating" value="3" />
+                    <label for="star3">★</label>
+                    <input type="radio" id="star2" name="rating" value="2" />
+                    <label for="star2">★</label>
+                    <input type="radio" id="star1" name="rating" value="1" />
+                    <label for="star1">★</label>
+                </div>
+                <img id="reactionImage" class="reaction-image" alt="Reaction">
+            </div>
 
             <div class="form-group">
                 <label for="name">Your Name:</label>
                 <input type="text" id="name" name="name" placeholder="Enter your name" required>
-            </div>
-
-            <label style="display: block; text-align: center; font-weight: 600; font-size: 14px; margin-bottom: 8px;">Your Rating:</label>
-            <div class="rating-group">
-                <input type="radio" id="star5" name="rating" value="5" required />
-                <label for="star5">★</label>
-                
-                <input type="radio" id="star4" name="rating" value="4" />
-                <label for="star4">★</label>
-                
-                <input type="radio" id="star3" name="rating" value="3" />
-                <label for="star3">★</label>
-                
-                <input type="radio" id="star2" name="rating" value="2" />
-                <label for="star2">★</label>
-                
-                <input type="radio" id="star1" name="rating" value="1" />
-                <label for="star1">★</label>
             </div>
 
             <div class="form-group">
@@ -252,50 +300,106 @@
             <h3>Thank You!</h3>
             <p>Your feedback has been successfully submitted.</p>
         </div>
+
+        <div id="cooldownMessage" class="cooldown-message">
+            <h3>Come Back Later</h3>
+            <p>You can only submit feedback once every 24 hours.</p>
+            <p id="timeRemaining" style="font-weight: bold; margin-top: 15px; color: #555;"></p>
+        </div>
     </div>
 
     <script>
         const form = document.getElementById('feedbackForm');
         const successMessage = document.getElementById('successMessage');
+        const cooldownMessage = document.getElementById('cooldownMessage');
         const BACKEND_URL = 'https://unoriginally-cnidogenous-josh.ngrok-free.dev/api/feedback/submit';
 
-        // --- Mobile-Ready CAPTCHA Logic ---
+        const reactionImage = document.getElementById('reactionImage');
+        const starLabels = document.querySelectorAll('.rating-group label');
+        const ratingInputs = document.querySelectorAll('.rating-group input');
+        const ratingGroup = document.getElementById('rating-group');
+
+        function showThinkingImage() {
+            const randomPic = Math.floor(Math.random() * 3) + 1;
+            reactionImage.src = `Images/Think${randomPic}.jpg`;
+            reactionImage.style.display = 'block';
+        }
+
+        function updateReactionImage(starValue) {
+            const randomPic = Math.floor(Math.random() * 3) + 1;
+            reactionImage.src = `Images/Star${starValue}-${randomPic}.jpg`;
+            reactionImage.style.display = 'block';
+        }
+
+        showThinkingImage();
+
+        starLabels.forEach(label => {
+            label.addEventListener('mouseenter', () => {
+                const inputId = label.getAttribute('for');
+                const input = document.getElementById(inputId);
+                updateReactionImage(input.value);
+            });
+        });
+
+        ratingGroup.addEventListener('mouseleave', () => {
+            const checkedInput = document.querySelector('.rating-group input:checked');
+            if (checkedInput) {
+                updateReactionImage(checkedInput.value);
+            } else {
+                showThinkingImage();
+            }
+        });
+
+        ratingInputs.forEach(input => {
+            input.addEventListener('change', () => {
+                updateReactionImage(input.value);
+            });
+        });
+
+        const COOLDOWN_MS = 24 * 60 * 60 * 1000;
         let currentCaptchaString = "";
+
+        function checkCooldown() {
+            const lastSubmit = localStorage.getItem('natnat_feedback_last_submit');
+            if (lastSubmit) {
+                const timeSinceSubmit = Date.now() - parseInt(lastSubmit);
+                if (timeSinceSubmit < COOLDOWN_MS) {
+                    form.style.display = 'none';
+                    cooldownMessage.style.display = 'block';
+
+                    const remainingMs = COOLDOWN_MS - timeSinceSubmit;
+                    const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
+                    const remainingMins = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+                    document.getElementById('timeRemaining').textContent = `Try again in ${remainingHours}h ${remainingMins}m.`;
+                    return true;
+                }
+            }
+            return false;
+        }
 
         function generateCaptcha() {
             const canvas = document.getElementById('captchaCanvas');
+            if (!canvas) return;
             const ctx = canvas.getContext('2d');
-            
-            // Handle High DPI (Retina) displays for crisp text on mobile
             const dpr = window.devicePixelRatio || 1;
-            
-            // Get the computed width of the canvas element from CSS
             const rect = canvas.getBoundingClientRect();
-            
-            // Set actual internal canvas resolution multiplied by device pixel ratio
-            const logicalWidth = rect.width > 0 ? rect.width : 240; 
+            const logicalWidth = rect.width > 0 ? rect.width : 240;
             const logicalHeight = 70;
-            
+
             canvas.width = logicalWidth * dpr;
             canvas.height = logicalHeight * dpr;
-            
-            // Scale context to match logical size
             ctx.scale(dpr, dpr);
-
             ctx.clearRect(0, 0, logicalWidth, logicalHeight);
-
-            // Background color
             ctx.fillStyle = '#f3f4f6';
             ctx.fillRect(0, 0, logicalWidth, logicalHeight);
 
             const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#$%&';
             currentCaptchaString = '';
-            
+
             for (let i = 0; i < 6; i++) {
                 currentCaptchaString += chars.charAt(Math.floor(Math.random() * chars.length));
             }
 
-            // Draw noise lines
             for (let i = 0; i < 35; i++) {
                 ctx.beginPath();
                 ctx.moveTo(Math.random() * logicalWidth, Math.random() * logicalHeight);
@@ -305,7 +409,6 @@
                 ctx.stroke();
             }
 
-            // Draw noise dots
             for (let i = 0; i < 200; i++) {
                 ctx.beginPath();
                 ctx.arc(Math.random() * logicalWidth, Math.random() * logicalHeight, Math.random() * 2, 0, Math.PI * 2);
@@ -313,65 +416,58 @@
                 ctx.fill();
             }
 
-            // Calculate spacing based on dynamic width
-            const totalSpacing = logicalWidth - 40; // Leave 20px padding on each side
+            const totalSpacing = logicalWidth - 40;
             const charSpacing = totalSpacing / 6;
 
-            // Draw distorted text
             for (let i = 0; i < currentCaptchaString.length; i++) {
                 ctx.save();
-                
                 const x = 20 + (i * charSpacing) + (Math.random() * 10 - 5);
-                const y = 45 + (Math.random() * 10 - 5); 
-                
+                const y = 45 + (Math.random() * 10 - 5);
                 ctx.translate(x, y);
-                
                 const angle = (Math.random() - 0.5) * Math.PI / 2;
                 ctx.rotate(angle);
-                
                 const fontSize = 24 + Math.random() * 10;
                 const fonts = ['Georgia', 'Courier New', 'Impact', 'Times New Roman'];
                 const font = fonts[Math.floor(Math.random() * fonts.length)];
                 ctx.font = `bold ${fontSize}px ${font}`;
-                
                 ctx.fillStyle = `rgb(${Math.random()*120}, ${Math.random()*120}, ${Math.random()*120})`;
                 ctx.shadowColor = "rgba(0,0,0,0.4)";
                 ctx.shadowBlur = 3;
-                
                 ctx.fillText(currentCaptchaString[i], -10, 0);
                 ctx.restore();
             }
         }
 
-        // Initialize CAPTCHA on load and handle resize events to redraw correctly
-        window.addEventListener('load', generateCaptcha);
-        window.addEventListener('resize', () => {
-            // Add a small delay on resize to allow CSS layout to settle
-            setTimeout(generateCaptcha, 100);
+        window.addEventListener('load', () => {
+            if (!checkCooldown()) {
+                generateCaptcha();
+            }
         });
-        
-        // Refresh button click
+
+        window.addEventListener('resize', () => {
+            if (form.style.display !== 'none') {
+                setTimeout(generateCaptcha, 100);
+            }
+        });
+
         document.getElementById('refreshCaptcha').addEventListener('click', () => {
             generateCaptcha();
             document.getElementById('captchaInput').value = '';
             document.getElementById('captchaError').style.display = 'none';
         });
-        // ---------------------------------------------
 
         form.addEventListener('submit', async function(event) {
             event.preventDefault();
 
-            // Validate CAPTCHA
             const userInput = document.getElementById('captchaInput').value;
             if (userInput !== currentCaptchaString) {
                 document.getElementById('captchaError').style.display = 'block';
-                generateCaptcha(); 
+                generateCaptcha();
                 document.getElementById('captchaInput').value = '';
-                // Focus back on the input for easier retry on mobile
-                document.getElementById('captchaInput').focus(); 
+                document.getElementById('captchaInput').focus();
                 return;
             }
-            
+
             document.getElementById('captchaError').style.display = 'none';
 
             const formData = new FormData(form);
@@ -402,13 +498,11 @@
                 if (response.ok) {
                     form.style.display = 'none';
                     successMessage.style.display = 'block';
+                    localStorage.setItem('natnat_feedback_last_submit', Date.now().toString());
                 } else {
-                    alert("Server error. Please try again.");
-                    generateCaptcha(); 
+                    generateCaptcha();
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert("Cannot connect to server. Is Ngrok and Java running?");
             }
         });
     </script>
