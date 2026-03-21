@@ -10,7 +10,6 @@
             margin: 0;
             padding: 0;
         }
-
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f3f4f6;
@@ -21,7 +20,6 @@
             min-height: 100vh;
             padding: 20px;
         }
-
         .feedback-container {
             background-color: #ffffff;
             width: 100%;
@@ -30,38 +28,32 @@
             border-radius: 12px;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
-
         .logo-container {
             text-align: center;
             margin-bottom: 20px;
         }
-
         @keyframes idleLogo {
             0% { transform: translateY(0) scale(1); }
             50% { transform: translateY(-8px) scale(1.03); }
             100% { transform: translateY(0) scale(1); }
         }
-
         .logo-container img {
             max-width: 180px;
             height: auto;
             object-fit: contain;
             animation: idleLogo 4s ease-in-out infinite;
         }
-
         .feedback-container h2 {
             margin-bottom: 10px;
             font-size: 24px;
             text-align: center;
         }
-
         .feedback-container p {
             color: #6b7280;
             text-align: center;
             margin-bottom: 25px;
             font-size: 15px;
         }
-
         .rating-wrapper {
             display: flex;
             align-items: center;
@@ -70,36 +62,35 @@
             margin-bottom: 25px;
             min-height: 100px;
         }
-
         .rating-group {
             display: flex;
             justify-content: center;
             flex-direction: row-reverse;
         }
-
         .rating-group input {
             display: none;
         }
-
         .rating-group label {
             font-size: 45px;
             color: #d1d5db;
             cursor: pointer;
-            padding: 0 5px;
+            padding: 0 6px;
             transition: color 0.2s ease, transform 0.2s ease;
             -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            touch-action: manipulation;
         }
-
-        .rating-group label:hover {
+        .rating-group label:hover,
+        .rating-group label:active {
             transform: scale(1.1);
         }
-
         .rating-group input:checked ~ label,
         .rating-group label:hover,
-        .rating-group label:hover ~ label {
+        .rating-group label:hover ~ label,
+        .rating-group label:active,
+        .rating-group label:active ~ label {
             color: #fbbf24;
         }
-
         .reaction-image {
             width: 90px;
             height: 90px;
@@ -110,18 +101,15 @@
             display: none;
             transition: opacity 0.3s ease;
         }
-
         .form-group {
             margin-bottom: 20px;
         }
-
         label {
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
             font-size: 14px;
         }
-
         input[type="text"],
         textarea {
             width: 100%;
@@ -131,19 +119,16 @@
             font-family: inherit;
             font-size: 16px;
         }
-
         textarea {
             resize: vertical;
             min-height: 100px;
         }
-
         input[type="text"]:focus,
         textarea:focus {
             outline: none;
             border-color: #111111;
             box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.2);
         }
-
         .captcha-wrapper {
             display: flex;
             flex-wrap: wrap;
@@ -151,7 +136,6 @@
             gap: 10px;
             margin-bottom: 10px;
         }
-
         #captchaCanvas {
             border: 1px solid #d1d5db;
             border-radius: 8px;
@@ -162,7 +146,6 @@
             height: 70px;
             touch-action: none;
         }
-
         .refresh-btn {
             background-color: #f3f4f6;
             color: #374151;
@@ -179,19 +162,16 @@
             justify-content: center;
             -webkit-tap-highlight-color: transparent;
         }
-
         .refresh-btn:hover, 
         .refresh-btn:active {
             background-color: #e5e7eb;
         }
-
         #captchaError {
             color: #ef4444;
             font-size: 14px;
             margin-top: 5px;
             display: none;
         }
-
         button[type="submit"] {
             width: 100%;
             background-color: #111111;
@@ -206,33 +186,47 @@
             margin-top: 10px;
             -webkit-tap-highlight-color: transparent;
         }
-
         button[type="submit"]:hover {
             background-color: #333333;
         }
-
         .success-message, .cooldown-message {
             display: none;
             text-align: center;
             padding: 20px 0;
         }
-
         .success-message h3 {
             color: #10b981;
             margin-bottom: 10px;
         }
-
         .cooldown-message h3 {
             color: #f59e0b;
             margin-bottom: 10px;
         }
-
+        #btn-reset-timer {
+            background-color: #dc3545;
+            color: white;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-weight: bold;
+            cursor: pointer;
+        }
         @media (max-width: 480px) {
             .feedback-container {
                 padding: 25px 20px;
             }
+            .rating-wrapper {
+                gap: 10px;
+            }
             .rating-group label {
-                font-size: 45px;
+                font-size: 40px;
+                padding: 0 4px;
+            }
+            .reaction-image {
+                width: 70px;
+                height: 70px;
             }
             .captcha-wrapper {
                 flex-direction: column;
@@ -306,6 +300,10 @@
             <p>You can only submit feedback once every 24 hours.</p>
             <p id="timeRemaining" style="font-weight: bold; margin-top: 15px; color: #555;"></p>
         </div>
+
+        <button type="button" id="btn-reset-timer">
+            DEV: Reset 24-Hour Timer
+        </button>
     </div>
 
     <script>
@@ -339,6 +337,12 @@
                 const input = document.getElementById(inputId);
                 updateReactionImage(input.value);
             });
+            
+            label.addEventListener('touchstart', () => {
+                const inputId = label.getAttribute('for');
+                const input = document.getElementById(inputId);
+                updateReactionImage(input.value);
+            }, {passive: true});
         });
 
         ratingGroup.addEventListener('mouseleave', () => {
@@ -495,6 +499,13 @@
                     body: JSON.stringify(feedbackData)
                 });
 
+                if (response.status === 429) { 
+                    form.style.display = 'none';
+                    cooldownMessage.style.display = 'block';
+                    document.getElementById('timeRemaining').textContent = "The server says you must wait 24 hours between submissions.";
+                    return;
+                }
+
                 if (response.ok) {
                     form.style.display = 'none';
                     successMessage.style.display = 'block';
@@ -505,6 +516,13 @@
             } catch (error) {
             }
         });
+
+        if (document.getElementById('btn-reset-timer')) {
+            document.getElementById('btn-reset-timer').addEventListener('click', () => {
+                localStorage.removeItem('natnat_feedback_last_submit');
+                window.location.reload();
+            });
+        }
     </script>
 </body>
 </html>
