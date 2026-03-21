@@ -697,14 +697,14 @@
         window.addEventListener('touchend', onDragEnd);
 
         window.addEventListener('load', async () => {
+            if (checkCooldown()) {
+                return;
+            }
             const isOnline = await checkServerStatus();
-            
             if (isOnline) {
                 loadingMessage.style.display = 'none';
-                if (!checkCooldown()) {
-                    form.style.display = 'block';
-                    setTimeout(initSliderCaptcha, 100);
-                }
+                form.style.display = 'block';
+                setTimeout(initSliderCaptcha, 100);
             }
         });
 
