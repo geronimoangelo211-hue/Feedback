@@ -250,7 +250,7 @@
         button[type="submit"]:hover {
             background-color: #333333;
         }
-        .success-message, .cooldown-message, .offline-message {
+        .success-message, .cooldown-message, .offline-message, .loading-message {
             display: none;
             text-align: center;
             padding: 20px 0;
@@ -265,6 +265,10 @@
         }
         .offline-message h3 {
             color: #ef4444;
+            margin-bottom: 10px;
+        }
+        .loading-message h3 {
+            color: #3b82f6;
             margin-bottom: 10px;
         }
         @media (max-width: 480px) {
@@ -292,7 +296,12 @@
             <img src="Images/Logo.png" alt="Company Logo">
         </div>
 
-        <form id="feedbackForm">
+        <div id="loadingMessage" class="loading-message" style="display: block;">
+            <h3>Connecting...</h3>
+            <p>Please wait while we connect to the server.</p>
+        </div>
+
+        <form id="feedbackForm" style="display: none;">
             <h2>Thank you and Provide some Feedback.</h2>
             <p>Let us know how we did today.</p>
 
@@ -366,6 +375,7 @@
         const successMessage = document.getElementById('successMessage');
         const cooldownMessage = document.getElementById('cooldownMessage');
         const offlineMessage = document.getElementById('offlineMessage');
+        const loadingMessage = document.getElementById('loadingMessage');
         const BACKEND_URL = 'https://unoriginally-cnidogenous-josh.ngrok-free.dev/api/feedback/submit';
 
         const reactionImage = document.getElementById('reactionImage');
@@ -422,6 +432,7 @@
             if (lastSubmit) {
                 const timeSinceSubmit = Date.now() - parseInt(lastSubmit);
                 if (timeSinceSubmit < COOLDOWN_MS) {
+                    loadingMessage.style.display = 'none';
                     form.style.display = 'none';
                     cooldownMessage.style.display = 'block';
                     const remainingMs = COOLDOWN_MS - timeSinceSubmit;
@@ -432,6 +443,30 @@
                 }
             }
             return false;
+        }
+
+        async function checkServerStatus() {
+            try {
+                const response = await fetch(BACKEND_URL, {
+                    method: 'GET',
+                    headers: {
+                        'ngrok-skip-browser-warning': 'true'
+                    }
+                });
+                
+                if (response.status === 502 || response.status === 504) {
+                    loadingMessage.style.display = 'none';
+                    form.style.display = 'none';
+                    offlineMessage.style.display = 'block';
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                loadingMessage.style.display = 'none';
+                form.style.display = 'none';
+                offlineMessage.style.display = 'block';
+                return false;
+            }
         }
 
         let isCaptchaSolved = false;
@@ -661,9 +696,15 @@
         window.addEventListener('mouseup', onDragEnd);
         window.addEventListener('touchend', onDragEnd);
 
-        window.addEventListener('load', () => {
-            if (!checkCooldown()) {
-                setTimeout(initSliderCaptcha, 100);
+        window.addEventListener('load', async () => {
+            const isOnline = await checkServerStatus();
+            
+            if (isOnline) {
+                loadingMessage.style.display = 'none';
+                if (!checkCooldown()) {
+                    form.style.display = 'block';
+                    setTimeout(initSliderCaptcha, 100);
+                }
             }
         });
 
