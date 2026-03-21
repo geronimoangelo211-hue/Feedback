@@ -250,7 +250,7 @@
         button[type="submit"]:hover {
             background-color: #333333;
         }
-        .success-message, .cooldown-message {
+        .success-message, .cooldown-message, .offline-message {
             display: none;
             text-align: center;
             padding: 20px 0;
@@ -263,16 +263,9 @@
             color: #f59e0b;
             margin-bottom: 10px;
         }
-        #btn-reset-timer {
-            background-color: #dc3545;
-            color: white;
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            margin-top: 20px;
-            font-weight: bold;
-            cursor: pointer;
+        .offline-message h3 {
+            color: #ef4444;
+            margin-bottom: 10px;
         }
         @media (max-width: 480px) {
             .feedback-container {
@@ -362,15 +355,17 @@
             <p id="timeRemaining" style="font-weight: bold; margin-top: 15px; color: #555;"></p>
         </div>
 
-        <button type="button" id="btn-reset-timer">
-            DEV: Reset 24-Hour Timer
-        </button>
+        <div id="offlineMessage" class="offline-message">
+            <h3>System Offline</h3>
+            <p>User Admin Closed the Feedback. Please try again later.</p>
+        </div>
     </div>
 
     <script>
         const form = document.getElementById('feedbackForm');
         const successMessage = document.getElementById('successMessage');
         const cooldownMessage = document.getElementById('cooldownMessage');
+        const offlineMessage = document.getElementById('offlineMessage');
         const BACKEND_URL = 'https://unoriginally-cnidogenous-josh.ngrok-free.dev/api/feedback/submit';
 
         const reactionImage = document.getElementById('reactionImage');
@@ -732,18 +727,14 @@
                     successMessage.style.display = 'block';
                     localStorage.setItem('natnat_feedback_last_submit', Date.now().toString());
                 } else {
-                    initSliderCaptcha();
+                    form.style.display = 'none';
+                    offlineMessage.style.display = 'block';
                 }
             } catch (error) {
+                form.style.display = 'none';
+                offlineMessage.style.display = 'block';
             }
         });
-
-        if (document.getElementById('btn-reset-timer')) {
-            document.getElementById('btn-reset-timer').addEventListener('click', () => {
-                localStorage.removeItem('natnat_feedback_last_submit');
-                window.location.reload();
-            });
-        }
     </script>
 </body>
 </html>
