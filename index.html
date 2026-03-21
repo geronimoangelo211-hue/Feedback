@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Natnat's Feedback System</title>
     <style>
         * {
@@ -61,6 +61,7 @@
             cursor: pointer;
             padding: 0 5px;
             transition: color 0.2s ease;
+            -webkit-tap-highlight-color: transparent; /* Removes blue tap flash on mobile */
         }
 
         .rating-group input:checked ~ label,
@@ -87,7 +88,7 @@
             border: 1px solid #d1d5db;
             border-radius: 8px;
             font-family: inherit;
-            font-size: 15px;
+            font-size: 16px; /* CRITICAL for mobile: Must be 16px to prevent iOS auto-zoom */
         }
         
         textarea {
@@ -102,20 +103,71 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
         }
 
-        button {
+        /* --- Mobile-Optimized CAPTCHA Styles --- */
+        .captcha-wrapper {
+            display: flex;
+            flex-wrap: wrap; /* Allows stacking on very small screens */
+            align-items: stretch;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        #captchaCanvas {
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            background-color: #e5e7eb;
+            letter-spacing: 5px;
+            flex-grow: 1; /* Takes up available space */
+            max-width: 100%;
+            height: 70px; /* Fixed height, fluid width */
+            touch-action: none; /* Prevents accidental scrolling when touching canvas */
+        }
+
+        .refresh-btn {
+            background-color: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            padding: 0 20px;
+            font-size: 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            min-height: 50px; /* Large touch target for mobile */
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .refresh-btn:hover, .refresh-btn:active {
+            background-color: #e5e7eb;
+        }
+
+        #captchaError {
+            color: #ef4444;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        /* --------------------------------------- */
+
+        button[type="submit"] {
             width: 100%;
             background-color: #3b82f6;
             color: white;
             border: none;
-            padding: 14px;
+            padding: 16px; /* Slightly larger for easier tapping */
             font-size: 16px;
             font-weight: 600;
             border-radius: 8px;
             cursor: pointer;
             transition: background-color 0.2s;
+            margin-top: 10px;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        button:hover {
+        button[type="submit"]:hover {
             background-color: #2563eb;
         }
 
@@ -130,12 +182,20 @@
             margin-bottom: 10px;
         }
 
+        /* Mobile specific media query adjustments */
         @media (max-width: 480px) {
             .feedback-container {
                 padding: 25px 20px;
             }
             .rating-group label {
-                font-size: 35px; 
+                font-size: 45px; /* Larger stars for easier tapping */
+            }
+            .captcha-wrapper {
+                flex-direction: column; /* Stack canvas and button vertically on tiny screens */
+            }
+            .refresh-btn {
+                padding: 12px;
+                width: 100%; /* Full width button on mobile */
             }
         }
     </style>
@@ -175,6 +235,16 @@
                 <textarea id="message" name="message" placeholder="Tell us what you think..." required></textarea>
             </div>
 
+            <div class="form-group">
+                <label for="captchaInput">Verify you are human (Case Sensitive):</label>
+                <div class="captcha-wrapper">
+                    <canvas id="captchaCanvas"></canvas>
+                    <button type="button" id="refreshCaptcha" class="refresh-btn" title="Refresh CAPTCHA">↻</button>
+                </div>
+                <input type="text" id="captchaInput" placeholder="Type the text exactly as shown" required autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                <div id="captchaError">Incorrect CAPTCHA. Please try again.</div>
+            </div>
+
             <button type="submit">Submit Feedback</button>
         </form>
 
@@ -187,12 +257,122 @@
     <script>
         const form = document.getElementById('feedbackForm');
         const successMessage = document.getElementById('successMessage');
-        
-        // This MUST be your active Ngrok URL for the Java server to receive the data
         const BACKEND_URL = 'https://unoriginally-cnidogenous-josh.ngrok-free.dev/api/feedback/submit';
+
+        // --- Mobile-Ready CAPTCHA Logic ---
+        let currentCaptchaString = "";
+
+        function generateCaptcha() {
+            const canvas = document.getElementById('captchaCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Handle High DPI (Retina) displays for crisp text on mobile
+            const dpr = window.devicePixelRatio || 1;
+            
+            // Get the computed width of the canvas element from CSS
+            const rect = canvas.getBoundingClientRect();
+            
+            // Set actual internal canvas resolution multiplied by device pixel ratio
+            const logicalWidth = rect.width > 0 ? rect.width : 240; 
+            const logicalHeight = 70;
+            
+            canvas.width = logicalWidth * dpr;
+            canvas.height = logicalHeight * dpr;
+            
+            // Scale context to match logical size
+            ctx.scale(dpr, dpr);
+
+            ctx.clearRect(0, 0, logicalWidth, logicalHeight);
+
+            // Background color
+            ctx.fillStyle = '#f3f4f6';
+            ctx.fillRect(0, 0, logicalWidth, logicalHeight);
+
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#$%&';
+            currentCaptchaString = '';
+            
+            for (let i = 0; i < 6; i++) {
+                currentCaptchaString += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+
+            // Draw noise lines
+            for (let i = 0; i < 35; i++) {
+                ctx.beginPath();
+                ctx.moveTo(Math.random() * logicalWidth, Math.random() * logicalHeight);
+                ctx.lineTo(Math.random() * logicalWidth, Math.random() * logicalHeight);
+                ctx.strokeStyle = `rgba(${Math.random()*255}, ${Math.random()*255}, ${Math.random()*255}, 0.7)`;
+                ctx.lineWidth = Math.random() * 3;
+                ctx.stroke();
+            }
+
+            // Draw noise dots
+            for (let i = 0; i < 200; i++) {
+                ctx.beginPath();
+                ctx.arc(Math.random() * logicalWidth, Math.random() * logicalHeight, Math.random() * 2, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${Math.random()*255}, ${Math.random()*255}, ${Math.random()*255}, 0.6)`;
+                ctx.fill();
+            }
+
+            // Calculate spacing based on dynamic width
+            const totalSpacing = logicalWidth - 40; // Leave 20px padding on each side
+            const charSpacing = totalSpacing / 6;
+
+            // Draw distorted text
+            for (let i = 0; i < currentCaptchaString.length; i++) {
+                ctx.save();
+                
+                const x = 20 + (i * charSpacing) + (Math.random() * 10 - 5);
+                const y = 45 + (Math.random() * 10 - 5); 
+                
+                ctx.translate(x, y);
+                
+                const angle = (Math.random() - 0.5) * Math.PI / 2;
+                ctx.rotate(angle);
+                
+                const fontSize = 24 + Math.random() * 10;
+                const fonts = ['Georgia', 'Courier New', 'Impact', 'Times New Roman'];
+                const font = fonts[Math.floor(Math.random() * fonts.length)];
+                ctx.font = `bold ${fontSize}px ${font}`;
+                
+                ctx.fillStyle = `rgb(${Math.random()*120}, ${Math.random()*120}, ${Math.random()*120})`;
+                ctx.shadowColor = "rgba(0,0,0,0.4)";
+                ctx.shadowBlur = 3;
+                
+                ctx.fillText(currentCaptchaString[i], -10, 0);
+                ctx.restore();
+            }
+        }
+
+        // Initialize CAPTCHA on load and handle resize events to redraw correctly
+        window.addEventListener('load', generateCaptcha);
+        window.addEventListener('resize', () => {
+            // Add a small delay on resize to allow CSS layout to settle
+            setTimeout(generateCaptcha, 100);
+        });
+        
+        // Refresh button click
+        document.getElementById('refreshCaptcha').addEventListener('click', () => {
+            generateCaptcha();
+            document.getElementById('captchaInput').value = '';
+            document.getElementById('captchaError').style.display = 'none';
+        });
+        // ---------------------------------------------
 
         form.addEventListener('submit', async function(event) {
             event.preventDefault();
+
+            // Validate CAPTCHA
+            const userInput = document.getElementById('captchaInput').value;
+            if (userInput !== currentCaptchaString) {
+                document.getElementById('captchaError').style.display = 'block';
+                generateCaptcha(); 
+                document.getElementById('captchaInput').value = '';
+                // Focus back on the input for easier retry on mobile
+                document.getElementById('captchaInput').focus(); 
+                return;
+            }
+            
+            document.getElementById('captchaError').style.display = 'none';
 
             const formData = new FormData(form);
             const name = formData.get('name');
@@ -214,7 +394,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'ngrok-skip-browser-warning': 'true' // Bypasses the Ngrok warning screen
+                        'ngrok-skip-browser-warning': 'true'
                     },
                     body: JSON.stringify(feedbackData)
                 });
@@ -224,6 +404,7 @@
                     successMessage.style.display = 'block';
                 } else {
                     alert("Server error. Please try again.");
+                    generateCaptcha(); 
                 }
             } catch (error) {
                 console.error('Error:', error);
