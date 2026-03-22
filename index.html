@@ -368,6 +368,11 @@
             <h3>System Offline</h3>
             <p>User Admin Closed the Feedback. Please try again later.</p>
         </div>
+
+        <div id="incognitoMessage" class="offline-message" style="display: none;">
+            <h3>Private Browsing Detected</h3>
+            <p>Please switch to a normal browser window to submit feedback. Incognito mode is disabled.</p>
+        </div>
     </div>
 
     <script>
@@ -382,6 +387,23 @@
         const starLabels = document.querySelectorAll('.rating-group label');
         const ratingInputs = document.querySelectorAll('.rating-group input');
         const ratingGroup = document.getElementById('rating-group');
+
+        async function isIncognito() {
+            return new Promise((resolve) => {
+                const fs = window.RequestFileSystem || window.webkitRequestFileSystem;
+                if (!fs) {
+                    if (navigator.storage && navigator.storage.estimate) {
+                        navigator.storage.estimate().then(estimate => {
+                            resolve(estimate.quota < 120000000); 
+                        });
+                    } else {
+                        resolve(false);
+                    }
+                } else {
+                    fs(window.TEMPORARY, 100, () => resolve(false), () => resolve(true));
+                }
+            });
+        }
 
         function showThinkingImage() {
             const randomPic = Math.floor(Math.random() * 3) + 1;
@@ -697,6 +719,13 @@
         window.addEventListener('touchend', onDragEnd);
 
         window.addEventListener('load', async () => {
+            const privateMode = await isIncognito();
+            if (privateMode) {
+                loadingMessage.style.display = 'none';
+                document.getElementById('incognitoMessage').style.display = 'block';
+                return;
+            }
+
             if (checkCooldown()) {
                 return;
             }
