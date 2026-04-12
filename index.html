@@ -18,61 +18,62 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            padding: 20px;
+            padding: 10px; /* Reduced from 20px */
+            overflow-y: auto; /* Will hide scrollbar if it fits */
         }
         .feedback-container {
             background-color: #ffffff;
             width: 100%;
-            max-width: 500px;
-            padding: 40px;
+            max-width: 480px; /* Slightly slimmer */
+            padding: 25px 30px; /* Compressed padding */
             border-radius: 12px;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
         .logo-container {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 10px; /* Compressed */
         }
         @keyframes idleLogo {
             0% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-8px) scale(1.03); }
+            50% { transform: translateY(-5px) scale(1.03); }
             100% { transform: translateY(0) scale(1); }
         }
         .logo-container img {
-            max-width: 180px;
+            max-width: 90px; /* Smaller Logo */
             height: auto;
             object-fit: contain;
             animation: idleLogo 4s ease-in-out infinite;
         }
         .feedback-container h2 {
-            margin-bottom: 10px;
-            font-size: 24px;
+            margin-bottom: 5px;
+            font-size: 20px; /* Smaller Header */
             text-align: center;
         }
         .feedback-container p {
             color: #6b7280;
             text-align: center;
-            margin-bottom: 25px;
-            font-size: 15px;
+            margin-bottom: 15px; /* Compressed */
+            font-size: 13px; /* Smaller Text */
         }
 
         .feedback-type-toggle {
             display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
+            gap: 8px;
+            margin-bottom: 15px; /* Compressed */
             background: #f3f4f6;
-            padding: 6px;
-            border-radius: 10px;
+            padding: 4px; /* Compressed */
+            border-radius: 8px;
         }
         .type-btn {
             flex: 1;
-            padding: 12px 10px;
+            padding: 8px 5px; /* Compressed */
             border: none;
             background: transparent;
             color: #6b7280;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 12px; /* Smaller Font */
             transition: all 0.3s ease;
             -webkit-tap-highlight-color: transparent;
         }
@@ -86,9 +87,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 20px;
-            margin-bottom: 25px;
-            min-height: 100px;
+            gap: 15px;
+            margin-bottom: 15px; /* Compressed */
         }
         .rating-group {
             display: flex;
@@ -99,10 +99,10 @@
             display: none;
         }
         .rating-group label {
-            font-size: 45px;
+            font-size: 38px; /* Smaller Stars */
             color: #d1d5db;
             cursor: pointer;
-            padding: 0 6px;
+            padding: 0 3px;
             transition: color 0.2s ease, transform 0.2s ease;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
@@ -120,17 +120,17 @@
             color: #fbbf24;
         }
         .reaction-image {
-            width: 90px;
-            height: 90px;
+            width: 60px; /* Smaller Avatar */
+            height: 60px;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid #f3f4f6;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 2px solid #f3f4f6;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             display: none;
             transition: opacity 0.3s ease;
         }
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 12px; /* Compressed */
         }
         
         #employeeSelectGroup {
@@ -138,21 +138,20 @@
             animation: fadeInDown 0.3s ease forwards;
         }
 
-        /* NEW: Selected Employee Profile Popup */
         #selectedEmployeeProfile {
             display: none;
             align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-            padding: 12px 15px;
+            gap: 12px;
+            margin-bottom: 10px; /* Compressed */
+            padding: 8px 12px; /* Compressed */
             background: #f8f9fa;
-            border-radius: 8px;
+            border-radius: 6px;
             border: 1px solid #e5e7eb;
             animation: fadeInDown 0.3s ease forwards;
         }
         #selectedEmpAvatar {
-            width: 50px;
-            height: 50px;
+            width: 40px; /* Smaller Employee Pic */
+            height: 40px;
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid #111;
@@ -165,25 +164,25 @@
 
         label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 4px; /* Compressed */
             font-weight: 600;
-            font-size: 14px;
+            font-size: 13px; /* Smaller Font */
         }
         input[type="text"],
         textarea,
         select {
             width: 100%;
-            padding: 12px;
+            padding: 10px; /* Compressed */
             border: 1px solid #d1d5db;
-            border-radius: 8px;
+            border-radius: 6px;
             font-family: inherit;
-            font-size: 16px;
+            font-size: 14px; /* Smaller Font */
             background-color: white;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         textarea {
             resize: vertical;
-            min-height: 100px;
+            min-height: 50px; /* Compressed Box */
         }
         input[type="text"]:focus,
         textarea:focus,
@@ -195,17 +194,17 @@
         .slider-captcha-wrapper {
             position: relative;
             width: 100%;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             touch-action: none;
         }
         .slider-puzzle-container {
             position: relative;
             width: 100%;
-            height: 150px;
-            border-radius: 8px;
+            height: 90px; /* Significantly compressed puzzle height */
+            border-radius: 6px;
             overflow: hidden;
             background-color: #e5e7eb;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
         #captchaBg {
             display: block;
@@ -221,16 +220,16 @@
         }
         .captcha-refresh {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 30px;
-            height: 30px;
+            top: 6px;
+            right: 6px;
+            width: 24px;
+            height: 24px;
             background: rgba(255, 255, 255, 0.8);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 16px;
             cursor: pointer;
             z-index: 3;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -243,10 +242,10 @@
         .slider-control {
             position: relative;
             width: 100%;
-            height: 44px;
+            height: 40px; /* Compressed */
             background: #f3f4f6;
             border: 1px solid #d1d5db;
-            border-radius: 22px;
+            border-radius: 20px;
             display: flex;
             align-items: center;
             box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
@@ -256,7 +255,7 @@
             width: 100%;
             text-align: center;
             color: #6b7280;
-            font-size: 14px;
+            font-size: 12px;
             user-select: none;
             pointer-events: none;
         }
@@ -265,15 +264,15 @@
             height: 100%;
             width: 0;
             background: #dbeafe;
-            border-radius: 22px 0 0 22px;
+            border-radius: 20px 0 0 20px;
             z-index: 1;
         }
         .slider-thumb {
             position: absolute;
             top: -1px;
             left: 0;
-            width: 46px;
-            height: 46px;
+            width: 42px; /* Compressed */
+            height: 42px; /* Compressed */
             background: #ffffff;
             border: 1px solid #d1d5db;
             border-radius: 50%;
@@ -284,7 +283,7 @@
             cursor: grab;
             z-index: 2;
             color: #3b82f6;
-            font-size: 18px;
+            font-size: 16px;
             user-select: none;
         }
         .slider-thumb:active {
@@ -292,8 +291,8 @@
         }
         #captchaError {
             color: #ef4444;
-            font-size: 14px;
-            margin-top: 5px;
+            font-size: 12px;
+            margin-top: 4px;
             display: none;
         }
         button[type="submit"] {
@@ -301,13 +300,13 @@
             background-color: #111111;
             color: white;
             border: none;
-            padding: 16px;
-            font-size: 16px;
+            padding: 12px; /* Compressed */
+            font-size: 15px;
             font-weight: 600;
             border-radius: 8px;
             cursor: pointer;
             transition: background-color 0.2s;
-            margin-top: 10px;
+            margin-top: 5px;
             -webkit-tap-highlight-color: transparent;
         }
         button[type="submit"]:hover {
@@ -318,41 +317,20 @@
             text-align: center;
             padding: 20px 0;
         }
-        .success-message h3 {
-            color: #10b981;
-            margin-bottom: 10px;
+        .success-message h3, .cooldown-message h3, .offline-message h3, .loading-message h3 {
+            margin-bottom: 8px;
+            font-size: 18px;
         }
-        .cooldown-message h3 {
-            color: #f59e0b;
-            margin-bottom: 10px;
-        }
-        .offline-message h3 {
-            color: #ef4444;
-            margin-bottom: 10px;
-        }
-        .loading-message h3 {
-            color: #3b82f6;
-            margin-bottom: 10px;
-        }
+        .success-message h3 { color: #10b981; }
+        .cooldown-message h3 { color: #f59e0b; }
+        .offline-message h3 { color: #ef4444; }
+        .loading-message h3 { color: #3b82f6; }
+        
         @media (max-width: 480px) {
-            .feedback-container {
-                padding: 25px 20px;
-            }
-            .feedback-type-toggle {
-                flex-direction: column;
-                gap: 5px;
-            }
-            .rating-wrapper {
-                gap: 10px;
-            }
-            .rating-group label {
-                font-size: 40px;
-                padding: 0 4px;
-            }
-            .reaction-image {
-                width: 70px;
-                height: 70px;
-            }
+            .feedback-container { padding: 20px 15px; }
+            .rating-wrapper { gap: 10px; }
+            .rating-group label { font-size: 32px; padding: 0 2px; }
+            .reaction-image { width: 50px; height: 50px; }
         }
     </style>
 </head>
@@ -383,8 +361,8 @@
                 <div id="selectedEmployeeProfile">
                     <img id="selectedEmpAvatar" src="Images/placeholder.png" alt="Avatar">
                     <div style="display: flex; flex-direction: column;">
-                        <span id="selectedEmpName" style="font-weight: bold; color: #111; font-size: 15px;"></span>
-                        <span id="selectedEmpRole" style="color: #4b5563; font-size: 11px; background: #e5e7eb; padding: 3px 8px; border-radius: 12px; width: fit-content; margin-top: 4px; font-weight: 600; text-transform: uppercase;"></span>
+                        <span id="selectedEmpName" style="font-weight: bold; color: #111; font-size: 14px;"></span>
+                        <span id="selectedEmpRole" style="color: #4b5563; font-size: 10px; background: #e5e7eb; padding: 2px 6px; border-radius: 10px; width: fit-content; margin-top: 4px; font-weight: 600; text-transform: uppercase;"></span>
                     </div>
                 </div>
 
@@ -393,7 +371,7 @@
                 </select>
             </div>
 
-            <label style="display: block; text-align: center; font-weight: 600; font-size: 14px; margin-bottom: 8px;">Your Rating:</label>
+            <label style="display: block; text-align: center; font-weight: 600; font-size: 13px; margin-bottom: 5px;">Your Rating:</label>
             
             <div class="rating-wrapper">
                 <div class="rating-group" id="rating-group">
@@ -725,7 +703,7 @@
             trackText.style.display = 'block';
 
             const width = wrapper.clientWidth || 420; 
-            const height = 150;
+            const height = 90; // ADJUSTED FOR COMPACTNESS
             bgCanvas.width = width;
             bgCanvas.height = height;
 
@@ -829,13 +807,13 @@
             e.preventDefault(); 
             let currentX = e.clientX || e.touches[0].clientX;
             let moveX = currentX - startX;
-            const maxMove = wrapper.clientWidth - 46;
+            const maxMove = wrapper.clientWidth - 42;
             
             if (moveX < 0) moveX = 0;
             if (moveX > maxMove) moveX = maxMove;
 
             thumb.style.transform = `translateX(${moveX}px)`;
-            fill.style.width = `${moveX + 23}px`;
+            fill.style.width = `${moveX + 21}px`;
             pieceCanvas.style.transform = `translateX(${moveX}px)`;
         }
 
@@ -844,7 +822,7 @@
             isDragging = false;
             let currentX = e.clientX || (e.changedTouches ? e.changedTouches[0].clientX : startX);
             let moveX = currentX - startX;
-            const maxMove = wrapper.clientWidth - 46;
+            const maxMove = wrapper.clientWidth - 42;
             
             if (moveX < 0) moveX = 0;
             if (moveX > maxMove) moveX = maxMove;
@@ -858,7 +836,7 @@
                 errorMsg.style.display = 'none';
                 thumb.style.transform = `translateX(${puzzleX}px)`;
                 pieceCanvas.style.transform = `translateX(${puzzleX}px)`;
-                fill.style.width = `${puzzleX + 23}px`;
+                fill.style.width = `${puzzleX + 21}px`;
             } else {
                 thumb.style.transition = 'transform 0.3s ease';
                 fill.style.transition = 'width 0.3s ease';
