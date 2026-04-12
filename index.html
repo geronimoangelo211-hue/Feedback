@@ -55,7 +55,6 @@
             font-size: 15px;
         }
 
-        /* NEW: Toggle Buttons CSS */
         .feedback-type-toggle {
             display: flex;
             gap: 10px;
@@ -134,11 +133,31 @@
             margin-bottom: 20px;
         }
         
-        /* Added smooth transition for employee dropdown */
         #employeeSelectGroup {
             display: none;
             animation: fadeInDown 0.3s ease forwards;
         }
+
+        /* NEW: Selected Employee Profile Popup */
+        #selectedEmployeeProfile {
+            display: none;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            animation: fadeInDown 0.3s ease forwards;
+        }
+        #selectedEmpAvatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #111;
+        }
+
         @keyframes fadeInDown {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -360,6 +379,15 @@
 
             <div class="form-group" id="employeeSelectGroup">
                 <label for="employeeName">Select Employee:</label>
+                
+                <div id="selectedEmployeeProfile">
+                    <img id="selectedEmpAvatar" src="Images/placeholder.png" alt="Avatar">
+                    <div style="display: flex; flex-direction: column;">
+                        <span id="selectedEmpName" style="font-weight: bold; color: #111; font-size: 15px;"></span>
+                        <span id="selectedEmpRole" style="color: #4b5563; font-size: 11px; background: #e5e7eb; padding: 3px 8px; border-radius: 12px; width: fit-content; margin-top: 4px; font-weight: 600; text-transform: uppercase;"></span>
+                    </div>
+                </div>
+
                 <select id="employeeName" name="employeeName">
                     <option value="">-- Please select an employee --</option>
                 </select>
@@ -453,21 +481,51 @@
         const btnEmployeePerf = document.getElementById('btnEmployeePerf');
         const employeeSelectGroup = document.getElementById('employeeSelectGroup');
         const employeeNameSelect = document.getElementById('employeeName');
+        const selectedEmployeeProfile = document.getElementById('selectedEmployeeProfile');
+        const selectedEmpAvatar = document.getElementById('selectedEmpAvatar');
+        const selectedEmpName = document.getElementById('selectedEmpName');
+        const selectedEmpRole = document.getElementById('selectedEmpRole');
+
+        let availableEmployees = [];
 
         // Toggle Logic
         btnGeneralStore.addEventListener('click', () => {
             btnGeneralStore.classList.add('active');
             btnEmployeePerf.classList.remove('active');
             employeeSelectGroup.style.display = 'none';
-            employeeNameSelect.value = ''; // Reset selection
-            employeeNameSelect.removeAttribute('required'); // Not required if general
+            employeeNameSelect.value = ''; 
+            employeeNameSelect.removeAttribute('required'); 
+            selectedEmployeeProfile.style.display = 'none';
         });
 
         btnEmployeePerf.addEventListener('click', () => {
             btnEmployeePerf.classList.add('active');
             btnGeneralStore.classList.remove('active');
             employeeSelectGroup.style.display = 'block';
-            employeeNameSelect.setAttribute('required', 'required'); // Require if employee selected
+            employeeNameSelect.setAttribute('required', 'required'); 
+        });
+
+        // Trigger Profile Card on Dropdown Change
+        employeeNameSelect.addEventListener('change', (e) => {
+            const selectedName = e.target.value;
+            if (!selectedName) {
+                selectedEmployeeProfile.style.display = 'none';
+                return;
+            }
+
+            const emp = availableEmployees.find(u => {
+                const name = (u.fullName && u.fullName !== 'N/A' && u.fullName !== 'undefined') ? u.fullName : u.username;
+                return name === selectedName;
+            });
+
+            if (emp) {
+                selectedEmpAvatar.src = emp.profilePicture || 'Images/placeholder.png';
+                selectedEmpName.textContent = selectedName;
+                selectedEmpRole.textContent = emp.role || 'Staff';
+                selectedEmployeeProfile.style.display = 'flex';
+            } else {
+                selectedEmployeeProfile.style.display = 'none';
+            }
         });
 
         async function isIncognito() {
@@ -579,8 +637,8 @@
                     headers: { 'ngrok-skip-browser-warning': 'true' }
                 });
                 if (response.ok) {
-                    const users = await response.json();
-                    users.forEach(u => {
+                    availableEmployees = await response.json();
+                    availableEmployees.forEach(u => {
                         if (u.status !== 'UNVERIFIED' && u.username.toUpperCase() !== 'ADMIN') {
                             const name = (u.fullName && u.fullName !== 'N/A' && u.fullName !== 'undefined') ? u.fullName : u.username;
                             const option = document.createElement('option');
@@ -875,7 +933,6 @@
             const rating = parseInt(formData.get('rating'));
             const message = formData.get('message');
             
-            // Only capture employee name if the "Employee Performance" tab is active
             const isEmployeeTabActive = btnEmployeePerf.classList.contains('active');
             const employeeName = isEmployeeTabActive ? formData.get('employeeName') : "";
 
