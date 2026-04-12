@@ -54,6 +54,35 @@
             margin-bottom: 25px;
             font-size: 15px;
         }
+
+        /* NEW: Toggle Buttons CSS */
+        .feedback-type-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            background: #f3f4f6;
+            padding: 6px;
+            border-radius: 10px;
+        }
+        .type-btn {
+            flex: 1;
+            padding: 12px 10px;
+            border: none;
+            background: transparent;
+            color: #6b7280;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .type-btn.active {
+            background: #ffffff;
+            color: #111111;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
         .rating-wrapper {
             display: flex;
             align-items: center;
@@ -104,6 +133,17 @@
         .form-group {
             margin-bottom: 20px;
         }
+        
+        /* Added smooth transition for employee dropdown */
+        #employeeSelectGroup {
+            display: none;
+            animation: fadeInDown 0.3s ease forwards;
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         label {
             display: block;
             margin-bottom: 8px;
@@ -120,6 +160,7 @@
             font-family: inherit;
             font-size: 16px;
             background-color: white;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         textarea {
             resize: vertical;
@@ -130,7 +171,7 @@
         select:focus {
             outline: none;
             border-color: #111111;
-            box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.2);
+            box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.1);
         }
         .slider-captcha-wrapper {
             position: relative;
@@ -278,6 +319,10 @@
             .feedback-container {
                 padding: 25px 20px;
             }
+            .feedback-type-toggle {
+                flex-direction: column;
+                gap: 5px;
+            }
             .rating-wrapper {
                 gap: 10px;
             }
@@ -305,8 +350,20 @@
         </div>
 
         <form id="feedbackForm" style="display: none;">
-            <h2>Thank you and Provide some Feedback.</h2>
-            <p>Let us know how we did today.</p>
+            <h2>Thank you for your Feedback!</h2>
+            <p>What would you like to rate today?</p>
+
+            <div class="feedback-type-toggle">
+                <button type="button" id="btnGeneralStore" class="type-btn active">🏬 General Store</button>
+                <button type="button" id="btnEmployeePerf" class="type-btn">👤 Employee Performance</button>
+            </div>
+
+            <div class="form-group" id="employeeSelectGroup">
+                <label for="employeeName">Select Employee:</label>
+                <select id="employeeName" name="employeeName">
+                    <option value="">-- Please select an employee --</option>
+                </select>
+            </div>
 
             <label style="display: block; text-align: center; font-weight: 600; font-size: 14px; margin-bottom: 8px;">Your Rating:</label>
             
@@ -327,15 +384,8 @@
             </div>
 
             <div class="form-group">
-                <label for="employeeName">Rate an Employee (Optional):</label>
-                <select id="employeeName" name="employeeName">
-                    <option value="">-- General Store Feedback --</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="name">Your Name:</label>
-                <input type="text" id="name" name="name" placeholder="Enter your name" required>
+                <label for="name">Your Name (Optional):</label>
+                <input type="text" id="name" name="name" placeholder="Leave blank to remain anonymous">
             </div>
 
             <div class="form-group">
@@ -376,7 +426,7 @@
 
         <div id="offlineMessage" class="offline-message">
             <h3>System Offline</h3>
-            <p>User Admin Closed the Feedback. Please try again later.</p>
+            <p>The system is currently unavailable. Please try again later.</p>
         </div>
 
         <div id="incognitoMessage" class="offline-message" style="display: none;">
@@ -393,10 +443,32 @@
         const loadingMessage = document.getElementById('loadingMessage');
         const BACKEND_URL = 'https://unoriginally-cnidogenous-josh.ngrok-free.dev/api/feedback/submit';
 
+        // UI Elements
         const reactionImage = document.getElementById('reactionImage');
         const starLabels = document.querySelectorAll('.rating-group label');
         const ratingInputs = document.querySelectorAll('.rating-group input');
         const ratingGroup = document.getElementById('rating-group');
+
+        const btnGeneralStore = document.getElementById('btnGeneralStore');
+        const btnEmployeePerf = document.getElementById('btnEmployeePerf');
+        const employeeSelectGroup = document.getElementById('employeeSelectGroup');
+        const employeeNameSelect = document.getElementById('employeeName');
+
+        // Toggle Logic
+        btnGeneralStore.addEventListener('click', () => {
+            btnGeneralStore.classList.add('active');
+            btnEmployeePerf.classList.remove('active');
+            employeeSelectGroup.style.display = 'none';
+            employeeNameSelect.value = ''; // Reset selection
+            employeeNameSelect.removeAttribute('required'); // Not required if general
+        });
+
+        btnEmployeePerf.addEventListener('click', () => {
+            btnEmployeePerf.classList.add('active');
+            btnGeneralStore.classList.remove('active');
+            employeeSelectGroup.style.display = 'block';
+            employeeNameSelect.setAttribute('required', 'required'); // Require if employee selected
+        });
 
         async function isIncognito() {
             return new Promise((resolve) => {
@@ -508,14 +580,13 @@
                 });
                 if (response.ok) {
                     const users = await response.json();
-                    const select = document.getElementById('employeeName');
                     users.forEach(u => {
                         if (u.status !== 'UNVERIFIED' && u.username.toUpperCase() !== 'ADMIN') {
                             const name = (u.fullName && u.fullName !== 'N/A' && u.fullName !== 'undefined') ? u.fullName : u.username;
                             const option = document.createElement('option');
                             option.value = name;
                             option.textContent = name;
-                            select.appendChild(option);
+                            employeeNameSelect.appendChild(option);
                         }
                     });
                 }
@@ -524,6 +595,7 @@
             }
         }
 
+        // Slider Captcha Variables and logic
         let isCaptchaSolved = false;
         let puzzleX = 0;
         let puzzleY = 0;
@@ -799,9 +871,13 @@
             errorMsg.style.display = 'none';
 
             const formData = new FormData(form);
-            const name = formData.get('name');
+            const name = formData.get('name') || "Anonymous";
             const rating = parseInt(formData.get('rating'));
             const message = formData.get('message');
+            
+            // Only capture employee name if the "Employee Performance" tab is active
+            const isEmployeeTabActive = btnEmployeePerf.classList.contains('active');
+            const employeeName = isEmployeeTabActive ? formData.get('employeeName') : "";
 
             const now = new Date();
             const dateStr = now.toLocaleDateString('en-US') + ' ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
@@ -811,7 +887,7 @@
                 rating: rating,
                 message: message,
                 date: dateStr,
-                employeeName: formData.get('employeeName')
+                employeeName: employeeName
             };
 
             try {
