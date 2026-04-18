@@ -946,7 +946,6 @@
         window.addEventListener('mouseup', onDragEnd);
         window.addEventListener('touchend', onDragEnd);
 
-        // --- STARTUP LOGIC ---
         window.addEventListener('load', async () => {
             const privateMode = await isIncognito();
             if (privateMode) {
@@ -962,18 +961,13 @@
                 await loadEmployeesForDropdown();
                 loadingMessage.style.display = 'none';
 
-                if (targetUsername) {
-                    // QR CODE AUTO-LOCK MODE
-                    isEmployeeMode = true;
-                    selectionScreen.style.display = 'none';
-                    form.style.display = 'block';
-                    
-                    employeeSelectGroup.style.display = 'block';
-                    employeeNameSelect.setAttribute('required', 'required'); 
-                    formTitle.textContent = "Employee Rating";
-                    formSubtitle.textContent = "Please rate your experience with this specific staff member.";
-                    btnBack.style.display = 'none'; 
+                // ALWAYS SHOW THE TWO BIG BUTTONS FIRST
+                selectionScreen.style.display = 'block';
+                form.style.display = 'none';
 
+                // If they used a personalized QR code, pre-fill the dropdown in the background,
+                // but DO NOT skip the selection screen!
+                if (targetUsername) {
                     const emp = availableEmployees.find(u => u.username === targetUsername || u.fullName === targetUsername);
                     
                     if (emp) {
@@ -981,15 +975,9 @@
                         employeeNameSelect.value = displayName;
                         employeeNameSelect.dispatchEvent(new Event('change'));
                         
-                        employeeNameSelect.style.pointerEvents = 'none';
-                        employeeNameSelect.style.backgroundColor = '#e5e7eb';
-                        employeeNameSelect.style.opacity = '0.7'; 
+                        // Note: The dropdown is no longer locked or grayed out.
+                        // The back button is also fully accessible!
                     }
-                    setTimeout(initSliderCaptcha, 100);
-
-                } else {
-                    // NORMAL MODE: Show Gateway Screen
-                    selectionScreen.style.display = 'block';
                 }
             }
         });
