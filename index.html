@@ -44,35 +44,34 @@
             object-fit: contain;
             animation: idleLogo 4s ease-in-out infinite;
         }
-        .feedback-container h2 {
-            margin-bottom: 5px;
-            font-size: 20px; 
-            text-align: center;
-        }
-        .feedback-container p {
-            color: #6b7280;
-            text-align: center;
-            margin-bottom: 15px; 
-            font-size: 13px; 
-        }
-
-        /* --- NEW: BIG SQUARE BUTTONS UI --- */
+        
+        /* --- BIG SQUARE BUTTONS UI --- */
         .selection-screen {
             text-align: center;
-            animation: fadeIn 0.3s ease;
+            animation: fadeIn 0.4s ease forwards;
+            padding: 20px 0;
+        }
+        .selection-screen h2 {
+            font-size: 22px;
+            color: #111;
+            margin-bottom: 5px;
+        }
+        .selection-screen p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 25px;
         }
         .big-btn-container {
             display: flex;
-            gap: 15px;
-            margin-top: 20px;
+            gap: 20px;
             justify-content: center;
         }
         .big-square-btn {
             width: 150px;
-            height: 140px;
+            height: 150px;
             background: #ffffff;
             border: 2px solid #e5e7eb;
-            border-radius: 12px;
+            border-radius: 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -85,18 +84,20 @@
         .big-square-btn:hover, .big-square-btn:active {
             border-color: #8a2be2;
             background: #f8f0ff;
-            transform: translateY(-2px);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 15px rgba(138, 43, 226, 0.15);
         }
         .big-square-btn .btn-icon {
-            font-size: 45px;
+            font-size: 50px;
             margin-bottom: 10px;
         }
         .big-square-btn .btn-text {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: bold;
             color: #374151;
             padding: 0 5px;
         }
+        
         .btn-back {
             background: none;
             border: none;
@@ -113,6 +114,18 @@
             color: #111;
         }
         /* ---------------------------------- */
+
+        .feedback-container h2.form-title {
+            margin-bottom: 5px;
+            font-size: 20px; 
+            text-align: center;
+        }
+        .feedback-container p.form-subtitle {
+            color: #6b7280;
+            text-align: center;
+            margin-bottom: 15px; 
+            font-size: 13px; 
+        }
 
         .rating-wrapper {
             display: flex;
@@ -137,7 +150,6 @@
             transition: color 0.2s ease, transform 0.2s ease;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
-            touch-action: manipulation;
         }
         .rating-group label:hover,
         .rating-group label:active {
@@ -158,7 +170,6 @@
             border: 2px solid #f3f4f6;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             display: none;
-            transition: opacity 0.3s ease;
         }
         .form-group {
             margin-bottom: 12px; 
@@ -191,6 +202,10 @@
         @keyframes fadeInDown {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         label {
@@ -380,7 +395,8 @@
 
         <div id="selectionScreen" class="selection-screen" style="display: none;">
             <h2>Welcome!</h2>
-            <p>What would you like to rate today?</p>
+            <p>Please select what you would like to rate today.</p>
+            
             <div class="big-btn-container">
                 <button type="button" id="bigBtnGeneral" class="big-square-btn">
                     <span class="btn-icon">🏬</span>
@@ -388,16 +404,17 @@
                 </button>
                 <button type="button" id="bigBtnEmployee" class="big-square-btn">
                     <span class="btn-icon">👤</span>
-                    <span class="btn-text">Employee Performance</span>
+                    <span class="btn-text">Employee Button</span>
                 </button>
             </div>
         </div>
 
         <form id="feedbackForm" style="display: none;">
+            
             <button type="button" id="btnBack" class="btn-back">← Back to Selection</button>
             
-            <h2 id="formTitle">Rate our Shop</h2>
-            <p id="formSubtitle">Please share your experience with us.</p>
+            <h2 id="formTitle" class="form-title">Rate our Shop</h2>
+            <p id="formSubtitle" class="form-subtitle">Please share your experience with us.</p>
 
             <div class="form-group" id="employeeSelectGroup">
                 <label for="employeeName">Select Employee:</label>
@@ -503,7 +520,7 @@
         const ratingInputs = document.querySelectorAll('.rating-group input');
         const ratingGroup = document.getElementById('rating-group');
 
-        // New UI Elements
+        // Gateway Buttons
         const bigBtnGeneral = document.getElementById('bigBtnGeneral');
         const bigBtnEmployee = document.getElementById('bigBtnEmployee');
         const btnBack = document.getElementById('btnBack');
@@ -544,7 +561,7 @@
             employeeSelectGroup.style.display = 'block';
             employeeNameSelect.setAttribute('required', 'required'); 
             
-            formTitle.textContent = "Employee Performance";
+            formTitle.textContent = "Employee Rating";
             formSubtitle.textContent = "Please rate your experience with a specific staff member.";
             setTimeout(initSliderCaptcha, 100);
         });
@@ -552,7 +569,7 @@
         btnBack.addEventListener('click', () => {
             form.style.display = 'none';
             selectionScreen.style.display = 'block';
-            form.reset(); // Clear the form when going back
+            form.reset(); 
             showThinkingImage();
             selectedEmployeeProfile.style.display = 'none';
         });
@@ -585,9 +602,7 @@
                 const fs = window.RequestFileSystem || window.webkitRequestFileSystem;
                 if (!fs) {
                     if (navigator.storage && navigator.storage.estimate) {
-                        navigator.storage.estimate().then(estimate => {
-                            resolve(estimate.quota < 120000000); 
-                        });
+                        navigator.storage.estimate().then(estimate => resolve(estimate.quota < 120000000));
                     } else {
                         resolve(false);
                     }
@@ -613,13 +628,11 @@
 
         starLabels.forEach(label => {
             label.addEventListener('mouseenter', () => {
-                const inputId = label.getAttribute('for');
-                const input = document.getElementById(inputId);
+                const input = document.getElementById(label.getAttribute('for'));
                 updateReactionImage(input.value);
             });
             label.addEventListener('touchstart', () => {
-                const inputId = label.getAttribute('for');
-                const input = document.getElementById(inputId);
+                const input = document.getElementById(label.getAttribute('for'));
                 updateReactionImage(input.value);
             }, {passive: true});
         });
@@ -687,8 +700,6 @@
                 
                 if (response.ok) {
                     availableEmployees = await response.json();
-                    
-                    // Clear out default list just in case
                     employeeNameSelect.innerHTML = '<option value="">-- Please select an employee --</option>';
 
                     availableEmployees.forEach(u => {
@@ -697,13 +708,11 @@
                         if (u.status !== 'UNVERIFIED' && (u.username.toUpperCase() !== 'ADMIN' || isRequestedTarget)) { 
                             const name = (u.fullName && u.fullName !== 'N/A' && u.fullName !== 'undefined') ? u.fullName : u.username;
                             const option = document.createElement('option');
-                            option.value = name; // Make sure value is the name
+                            option.value = name; 
                             option.textContent = name;
                             employeeNameSelect.appendChild(option);
                         }
                     });
-                } else {
-                    console.error("Failed to load employees");
                 }
             } catch (e) {
                 console.error("Could not load employees list.", e);
@@ -949,9 +958,7 @@
                 return;
             }
 
-            if (checkCooldown()) {
-                return;
-            }
+            if (checkCooldown()) return;
 
             const isOnline = await checkServerStatus();
             if (isOnline) {
@@ -959,16 +966,16 @@
                 loadingMessage.style.display = 'none';
 
                 if (targetUsername) {
-                    // QR CODE AUTO-LOCK MODE: Bypass selection screen
+                    // QR CODE AUTO-LOCK MODE
                     isEmployeeMode = true;
                     selectionScreen.style.display = 'none';
                     form.style.display = 'block';
                     
                     employeeSelectGroup.style.display = 'block';
                     employeeNameSelect.setAttribute('required', 'required'); 
-                    formTitle.textContent = "Employee Performance";
+                    formTitle.textContent = "Employee Rating";
                     formSubtitle.textContent = "Please rate your experience with this specific staff member.";
-                    btnBack.style.display = 'none'; // Hide back button so they can't escape
+                    btnBack.style.display = 'none'; 
 
                     const emp = availableEmployees.find(u => u.username === targetUsername || u.fullName === targetUsername);
                     
@@ -977,7 +984,6 @@
                         employeeNameSelect.value = displayName;
                         employeeNameSelect.dispatchEvent(new Event('change'));
                         
-                        // Lock the dropdown
                         employeeNameSelect.style.pointerEvents = 'none';
                         employeeNameSelect.style.backgroundColor = '#e5e7eb';
                         employeeNameSelect.style.opacity = '0.7'; 
@@ -985,7 +991,7 @@
                     setTimeout(initSliderCaptcha, 100);
 
                 } else {
-                    // NORMAL MODE: Show the two big buttons
+                    // NORMAL MODE: Show Gateway Screen
                     selectionScreen.style.display = 'block';
                 }
             }
@@ -1023,7 +1029,6 @@
             const rating = parseInt(formData.get('rating'));
             const message = formData.get('message');
             
-            // FIXED: Submit uses isEmployeeMode boolean to decide if we attach the name
             const employeeName = isEmployeeMode ? formData.get('employeeName') : "";
 
             const now = new Date();
