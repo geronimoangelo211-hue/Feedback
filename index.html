@@ -872,6 +872,27 @@
             const isOnline = await checkServerStatus();
             if (isOnline) {
                 await loadEmployeesForDropdown();
+                
+                // --- NEW: AUTO-SELECT EMPLOYEE FROM URL ---
+                const targetUsername = urlParams.get('employeeUsername');
+                if (targetUsername) {
+                    const emp = availableEmployees.find(u => u.username === targetUsername);
+                    if (emp) {
+                        btnEmployeePerf.click(); 
+                        
+                        document.querySelector('.feedback-type-toggle').style.display = 'none';
+                        document.querySelector('#feedbackForm p').textContent = "Please rate your experience with this employee.";
+                        
+                        const displayName = (emp.fullName && emp.fullName !== 'N/A' && emp.fullName !== 'undefined') ? emp.fullName : emp.username;
+                        employeeNameSelect.value = displayName;
+                        employeeNameSelect.dispatchEvent(new Event('change'));
+                        
+                        employeeNameSelect.style.pointerEvents = 'none';
+                        employeeNameSelect.style.backgroundColor = '#e5e7eb';
+                    }
+                }
+            
+
                 loadingMessage.style.display = 'none';
                 form.style.display = 'block';
                 setTimeout(initSliderCaptcha, 100);
