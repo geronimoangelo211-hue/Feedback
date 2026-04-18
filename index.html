@@ -56,32 +56,63 @@
             font-size: 13px; 
         }
 
-        .feedback-type-toggle {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 15px; 
-            background: #f3f4f6;
-            padding: 4px; 
-            border-radius: 8px;
+        /* --- NEW: BIG SQUARE BUTTONS UI --- */
+        .selection-screen {
+            text-align: center;
+            animation: fadeIn 0.3s ease;
         }
-        .type-btn {
-            flex: 1;
-            padding: 8px 5px; 
-            border: none;
-            background: transparent;
-            color: #6b7280;
-            border-radius: 6px;
+        .big-btn-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        .big-square-btn {
+            width: 150px;
+            height: 140px;
+            background: #ffffff;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            font-weight: 600;
-            font-size: 12px; 
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             -webkit-tap-highlight-color: transparent;
         }
-        .type-btn.active {
-            background: #ffffff;
-            color: #111111;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        .big-square-btn:hover, .big-square-btn:active {
+            border-color: #8a2be2;
+            background: #f8f0ff;
+            transform: translateY(-2px);
         }
+        .big-square-btn .btn-icon {
+            font-size: 45px;
+            margin-bottom: 10px;
+        }
+        .big-square-btn .btn-text {
+            font-size: 14px;
+            font-weight: bold;
+            color: #374151;
+            padding: 0 5px;
+        }
+        .btn-back {
+            background: none;
+            border: none;
+            color: #6b7280;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s;
+        }
+        .btn-back:hover {
+            color: #111;
+        }
+        /* ---------------------------------- */
 
         .rating-wrapper {
             display: flex;
@@ -331,6 +362,7 @@
             .rating-wrapper { gap: 10px; }
             .rating-group label { font-size: 32px; padding: 0 2px; }
             .reaction-image { width: 50px; height: 50px; }
+            .big-square-btn { width: 130px; height: 130px; }
         }
     </style>
 </head>
@@ -338,7 +370,7 @@
 
     <div class="feedback-container">
         <div class="logo-container">
-            <img src="Images/Logo.png" alt="Company Logo">
+            <img src="Images/Logo.png" alt="Company Logo" onerror="this.style.display='none'">
         </div>
 
         <div id="loadingMessage" class="loading-message" style="display: block;">
@@ -346,14 +378,26 @@
             <p>Please wait while we connect to the server.</p>
         </div>
 
-        <form id="feedbackForm" style="display: none;">
-            <h2>Thank you for your Feedback!</h2>
+        <div id="selectionScreen" class="selection-screen" style="display: none;">
+            <h2>Welcome!</h2>
             <p>What would you like to rate today?</p>
-
-            <div class="feedback-type-toggle">
-                <button type="button" id="btnGeneralStore" class="type-btn active">🏬 General Store</button>
-                <button type="button" id="btnEmployeePerf" class="type-btn">👤 Employee Performance</button>
+            <div class="big-btn-container">
+                <button type="button" id="bigBtnGeneral" class="big-square-btn">
+                    <span class="btn-icon">🏬</span>
+                    <span class="btn-text">General Shop</span>
+                </button>
+                <button type="button" id="bigBtnEmployee" class="big-square-btn">
+                    <span class="btn-icon">👤</span>
+                    <span class="btn-text">Employee Performance</span>
+                </button>
             </div>
+        </div>
+
+        <form id="feedbackForm" style="display: none;">
+            <button type="button" id="btnBack" class="btn-back">← Back to Selection</button>
+            
+            <h2 id="formTitle">Rate our Shop</h2>
+            <p id="formSubtitle">Please share your experience with us.</p>
 
             <div class="form-group" id="employeeSelectGroup">
                 <label for="employeeName">Select Employee:</label>
@@ -443,6 +487,7 @@
 
     <script>
         const form = document.getElementById('feedbackForm');
+        const selectionScreen = document.getElementById('selectionScreen');
         const successMessage = document.getElementById('successMessage');
         const cooldownMessage = document.getElementById('cooldownMessage');
         const offlineMessage = document.getElementById('offlineMessage');
@@ -451,14 +496,20 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const currentServerId = urlParams.get('serverId') || 'DEFAULT_SRV';
+        const targetUsername = urlParams.get('employeeUsername');
 
         const reactionImage = document.getElementById('reactionImage');
         const starLabels = document.querySelectorAll('.rating-group label');
         const ratingInputs = document.querySelectorAll('.rating-group input');
         const ratingGroup = document.getElementById('rating-group');
 
-        const btnGeneralStore = document.getElementById('btnGeneralStore');
-        const btnEmployeePerf = document.getElementById('btnEmployeePerf');
+        // New UI Elements
+        const bigBtnGeneral = document.getElementById('bigBtnGeneral');
+        const bigBtnEmployee = document.getElementById('bigBtnEmployee');
+        const btnBack = document.getElementById('btnBack');
+        const formTitle = document.getElementById('formTitle');
+        const formSubtitle = document.getElementById('formSubtitle');
+
         const employeeSelectGroup = document.getElementById('employeeSelectGroup');
         const employeeNameSelect = document.getElementById('employeeName');
         const selectedEmployeeProfile = document.getElementById('selectedEmployeeProfile');
@@ -467,23 +518,46 @@
         const selectedEmpRole = document.getElementById('selectedEmpRole');
 
         let availableEmployees = [];
+        let isEmployeeMode = false;
 
-        btnGeneralStore.addEventListener('click', () => {
-            btnGeneralStore.classList.add('active');
-            btnEmployeePerf.classList.remove('active');
+        // --- BUTTON NAVIGATION LOGIC ---
+        bigBtnGeneral.addEventListener('click', () => {
+            isEmployeeMode = false;
+            selectionScreen.style.display = 'none';
+            form.style.display = 'block';
+            
             employeeSelectGroup.style.display = 'none';
             employeeNameSelect.value = ''; 
             employeeNameSelect.removeAttribute('required'); 
             selectedEmployeeProfile.style.display = 'none';
+            
+            formTitle.textContent = "General Shop Feedback";
+            formSubtitle.textContent = "Rate your overall experience with our inventory and store.";
+            setTimeout(initSliderCaptcha, 100);
         });
 
-        btnEmployeePerf.addEventListener('click', () => {
-            btnEmployeePerf.classList.add('active');
-            btnGeneralStore.classList.remove('active');
+        bigBtnEmployee.addEventListener('click', () => {
+            isEmployeeMode = true;
+            selectionScreen.style.display = 'none';
+            form.style.display = 'block';
+            
             employeeSelectGroup.style.display = 'block';
             employeeNameSelect.setAttribute('required', 'required'); 
+            
+            formTitle.textContent = "Employee Performance";
+            formSubtitle.textContent = "Please rate your experience with a specific staff member.";
+            setTimeout(initSliderCaptcha, 100);
         });
 
+        btnBack.addEventListener('click', () => {
+            form.style.display = 'none';
+            selectionScreen.style.display = 'block';
+            form.reset(); // Clear the form when going back
+            showThinkingImage();
+            selectedEmployeeProfile.style.display = 'none';
+        });
+
+        // --- EMPLOYEE DROPDOWN LOGIC ---
         employeeNameSelect.addEventListener('change', (e) => {
             const selectedName = e.target.value;
             if (!selectedName) {
@@ -573,6 +647,7 @@
                 const timeSinceSubmit = Date.now() - parseInt(lastSubmit);
                 if (timeSinceSubmit < COOLDOWN_MS) {
                     loadingMessage.style.display = 'none';
+                    selectionScreen.style.display = 'none';
                     form.style.display = 'none';
                     cooldownMessage.style.display = 'block';
                     const remainingMs = COOLDOWN_MS - timeSinceSubmit;
@@ -589,21 +664,16 @@
             try {
                 const response = await fetch(BACKEND_URL, {
                     method: 'GET',
-                    headers: {
-                        'ngrok-skip-browser-warning': 'true'
-                    }
+                    headers: { 'ngrok-skip-browser-warning': 'true' }
                 });
-                
                 if (response.status === 502 || response.status === 504) {
                     loadingMessage.style.display = 'none';
-                    form.style.display = 'none';
                     offlineMessage.style.display = 'block';
                     return false;
                 }
                 return true;
             } catch (error) {
                 loadingMessage.style.display = 'none';
-                form.style.display = 'none';
                 offlineMessage.style.display = 'block';
                 return false;
             }
@@ -614,23 +684,33 @@
                 const response = await fetch(`https://unoriginally-cnidogenous-josh.ngrok-free.dev/api/users/all?serverId=${currentServerId}`, {
                     headers: { 'ngrok-skip-browser-warning': 'true' }
                 });
+                
                 if (response.ok) {
                     availableEmployees = await response.json();
+                    
+                    // Clear out default list just in case
+                    employeeNameSelect.innerHTML = '<option value="">-- Please select an employee --</option>';
+
                     availableEmployees.forEach(u => {
-                        if (u.status !== 'UNVERIFIED' && u.username.toUpperCase() !== 'ADMIN') {
+                        const isRequestedTarget = targetUsername && (targetUsername === u.username || targetUsername === u.fullName);
+
+                        if (u.status !== 'UNVERIFIED' && (u.username.toUpperCase() !== 'ADMIN' || isRequestedTarget)) { 
                             const name = (u.fullName && u.fullName !== 'N/A' && u.fullName !== 'undefined') ? u.fullName : u.username;
                             const option = document.createElement('option');
-                            option.value = name;
+                            option.value = name; // Make sure value is the name
                             option.textContent = name;
                             employeeNameSelect.appendChild(option);
                         }
                     });
+                } else {
+                    console.error("Failed to load employees");
                 }
             } catch (e) {
                 console.error("Could not load employees list.", e);
             }
         }
 
+        // --- SLIDER CAPTCHA LOGIC ---
         let isCaptchaSolved = false;
         let puzzleX = 0;
         let puzzleY = 0;
@@ -687,6 +767,8 @@
         }
 
         function initSliderCaptcha() {
+            if (form.style.display === 'none') return;
+
             isCaptchaSolved = false;
             errorMsg.style.display = 'none';
             thumb.style.transition = 'none';
@@ -858,6 +940,7 @@
         window.addEventListener('mouseup', onDragEnd);
         window.addEventListener('touchend', onDragEnd);
 
+        // --- STARTUP LOGIC ---
         window.addEventListener('load', async () => {
             const privateMode = await isIncognito();
             if (privateMode) {
@@ -869,33 +952,42 @@
             if (checkCooldown()) {
                 return;
             }
+
             const isOnline = await checkServerStatus();
             if (isOnline) {
                 await loadEmployeesForDropdown();
-                
-                // --- NEW: AUTO-SELECT EMPLOYEE FROM URL ---
-                const targetUsername = urlParams.get('employeeUsername');
+                loadingMessage.style.display = 'none';
+
                 if (targetUsername) {
-                    const emp = availableEmployees.find(u => u.username === targetUsername);
+                    // QR CODE AUTO-LOCK MODE: Bypass selection screen
+                    isEmployeeMode = true;
+                    selectionScreen.style.display = 'none';
+                    form.style.display = 'block';
+                    
+                    employeeSelectGroup.style.display = 'block';
+                    employeeNameSelect.setAttribute('required', 'required'); 
+                    formTitle.textContent = "Employee Performance";
+                    formSubtitle.textContent = "Please rate your experience with this specific staff member.";
+                    btnBack.style.display = 'none'; // Hide back button so they can't escape
+
+                    const emp = availableEmployees.find(u => u.username === targetUsername || u.fullName === targetUsername);
+                    
                     if (emp) {
-                        btnEmployeePerf.click(); 
-                        
-                        document.querySelector('.feedback-type-toggle').style.display = 'none';
-                        document.querySelector('#feedbackForm p').textContent = "Please rate your experience with this employee.";
-                        
                         const displayName = (emp.fullName && emp.fullName !== 'N/A' && emp.fullName !== 'undefined') ? emp.fullName : emp.username;
                         employeeNameSelect.value = displayName;
                         employeeNameSelect.dispatchEvent(new Event('change'));
                         
+                        // Lock the dropdown
                         employeeNameSelect.style.pointerEvents = 'none';
                         employeeNameSelect.style.backgroundColor = '#e5e7eb';
+                        employeeNameSelect.style.opacity = '0.7'; 
                     }
-                }
-            
+                    setTimeout(initSliderCaptcha, 100);
 
-                loadingMessage.style.display = 'none';
-                form.style.display = 'block';
-                setTimeout(initSliderCaptcha, 100);
+                } else {
+                    // NORMAL MODE: Show the two big buttons
+                    selectionScreen.style.display = 'block';
+                }
             }
         });
 
@@ -931,8 +1023,8 @@
             const rating = parseInt(formData.get('rating'));
             const message = formData.get('message');
             
-            const isEmployeeTabActive = btnEmployeePerf.classList.contains('active');
-            const employeeName = isEmployeeTabActive ? formData.get('employeeName') : "";
+            // FIXED: Submit uses isEmployeeMode boolean to decide if we attach the name
+            const employeeName = isEmployeeMode ? formData.get('employeeName') : "";
 
             const now = new Date();
             const dateStr = now.toLocaleDateString('en-US') + ' ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
@@ -957,6 +1049,7 @@
                 });
 
                 if (response.status === 429) { 
+                    selectionScreen.style.display = 'none';
                     form.style.display = 'none';
                     cooldownMessage.style.display = 'block';
                     document.getElementById('timeRemaining').textContent = "The server says you must wait 24 hours between submissions.";
@@ -964,14 +1057,17 @@
                 }
 
                 if (response.ok) {
+                    selectionScreen.style.display = 'none';
                     form.style.display = 'none';
                     successMessage.style.display = 'block';
                     localStorage.setItem('natnat_feedback_last_submit', Date.now().toString());
                 } else {
+                    selectionScreen.style.display = 'none';
                     form.style.display = 'none';
                     offlineMessage.style.display = 'block';
                 }
             } catch (error) {
+                selectionScreen.style.display = 'none';
                 form.style.display = 'none';
                 offlineMessage.style.display = 'block';
             }
