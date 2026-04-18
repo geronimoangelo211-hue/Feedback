@@ -520,7 +520,6 @@
         const ratingInputs = document.querySelectorAll('.rating-group input');
         const ratingGroup = document.getElementById('rating-group');
 
-        // Gateway Buttons
         const bigBtnGeneral = document.getElementById('bigBtnGeneral');
         const bigBtnEmployee = document.getElementById('bigBtnEmployee');
         const btnBack = document.getElementById('btnBack');
@@ -537,7 +536,6 @@
         let availableEmployees = [];
         let isEmployeeMode = false;
 
-        // --- BUTTON NAVIGATION LOGIC ---
         bigBtnGeneral.addEventListener('click', () => {
             isEmployeeMode = false;
             selectionScreen.style.display = 'none';
@@ -574,7 +572,6 @@
             selectedEmployeeProfile.style.display = 'none';
         });
 
-        // --- EMPLOYEE DROPDOWN LOGIC ---
         employeeNameSelect.addEventListener('change', (e) => {
             const selectedName = e.target.value;
             if (!selectedName) {
