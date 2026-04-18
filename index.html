@@ -489,7 +489,6 @@
             <h3>Come Back Later</h3>
             <p>You can only submit feedback once every 24 hours.</p>
             <p id="timeRemaining" style="font-weight: bold; margin-top: 15px; color: #555;"></p>
-        <button id="btnDevReset" style="margin-top: 20px; padding: 8px 15px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">🛠️ Dev: Reset Cooldown</button>
         </div>
 
         <div id="offlineMessage" class="offline-message">
@@ -572,16 +571,6 @@
             showThinkingImage();
             selectedEmployeeProfile.style.display = 'none';
         });
-
-        const btnDevReset = document.getElementById('btnDevReset');
-        if (btnDevReset) {
-            btnDevReset.addEventListener('click', () => {
-                // Wipe the saved timestamp from local storage
-                localStorage.removeItem('natnat_feedback_last_submit');
-                // Instantly reload the page to start fresh
-                window.location.reload();
-            });
-        }
 
         employeeNameSelect.addEventListener('change', (e) => {
             const selectedName = e.target.value;
@@ -711,9 +700,8 @@
                     employeeNameSelect.innerHTML = '<option value="">-- Please select an employee --</option>';
 
                     availableEmployees.forEach(u => {
-                        const isRequestedTarget = targetUsername && (targetUsername === u.username || targetUsername === u.fullName);
-
-                        if (u.status !== 'UNVERIFIED' && (u.username.toUpperCase() !== 'ADMIN' || isRequestedTarget)) { 
+                        // FIXED: Strictly exclude the 'Admin' account from ever showing up in the list
+                        if (u.status !== 'UNVERIFIED' && u.username.toUpperCase() !== 'ADMIN') { 
                             const name = (u.fullName && u.fullName !== 'N/A' && u.fullName !== 'undefined') ? u.fullName : u.username;
                             const option = document.createElement('option');
                             option.value = name; 
@@ -726,6 +714,36 @@
                 console.error("Could not load employees list.", e);
             }
         }
+
+        window.addEventListener('load', async () => {
+            const privateMode = await isIncognito();
+            if (privateMode) {
+                loadingMessage.style.display = 'none';
+                document.getElementById('incognitoMessage').style.display = 'block';
+                return;
+            }
+
+            if (checkCooldown()) return;
+
+            const isOnline = await checkServerStatus();
+            if (isOnline) {
+                await loadEmployeesForDropdown();
+                loadingMessage.style.display = 'none';
+
+                selectionScreen.style.display = 'block';
+                form.style.display = 'none';
+
+                if (targetUsername && targetUsername.toUpperCase() !== 'ADMIN') {
+                    const emp = availableEmployees.find(u => (u.username === targetUsername || u.fullName === targetUsername) && u.username.toUpperCase() !== 'ADMIN');
+                    
+                    if (emp) {
+                        const displayName = (emp.fullName && emp.fullName !== 'N/A' && emp.fullName !== 'undefined') ? emp.fullName : emp.username;
+                        employeeNameSelect.value = displayName;
+                        employeeNameSelect.dispatchEvent(new Event('change'));
+                    }
+                }
+            }
+        });
 
         // --- SLIDER CAPTCHA LOGIC ---
         let isCaptchaSolved = false;
@@ -972,22 +990,16 @@
                 await loadEmployeesForDropdown();
                 loadingMessage.style.display = 'none';
 
-                // ALWAYS SHOW THE TWO BIG BUTTONS FIRST
                 selectionScreen.style.display = 'block';
                 form.style.display = 'none';
 
-                // If they used a personalized QR code, pre-fill the dropdown in the background,
-                // but DO NOT skip the selection screen!
-                if (targetUsername) {
-                    const emp = availableEmployees.find(u => u.username === targetUsername || u.fullName === targetUsername);
+                if (targetUsername && targetUsername.toUpperCase() !== 'ADMIN') {
+                    const emp = availableEmployees.find(u => (u.username === targetUsername || u.fullName === targetUsername) && u.username.toUpperCase() !== 'ADMIN');
                     
                     if (emp) {
                         const displayName = (emp.fullName && emp.fullName !== 'N/A' && emp.fullName !== 'undefined') ? emp.fullName : emp.username;
                         employeeNameSelect.value = displayName;
                         employeeNameSelect.dispatchEvent(new Event('change'));
-                        
-                        // Note: The dropdown is no longer locked or grayed out.
-                        // The back button is also fully accessible!
                     }
                 }
             }
