@@ -489,6 +489,7 @@
             <h3>Come Back Later</h3>
             <p>You can only submit feedback once every 24 hours.</p>
             <p id="timeRemaining" style="font-weight: bold; margin-top: 15px; color: #555;"></p>
+        <button id="btnDevReset" style="margin-top: 20px; padding: 8px 15px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">🛠️ Dev: Reset Cooldown</button>
         </div>
 
         <div id="offlineMessage" class="offline-message">
@@ -571,6 +572,16 @@
             showThinkingImage();
             selectedEmployeeProfile.style.display = 'none';
         });
+
+        const btnDevReset = document.getElementById('btnDevReset');
+        if (btnDevReset) {
+            btnDevReset.addEventListener('click', () => {
+                // Wipe the saved timestamp from local storage
+                localStorage.removeItem('natnat_feedback_last_submit');
+                // Instantly reload the page to start fresh
+                window.location.reload();
+            });
+        }
 
         employeeNameSelect.addEventListener('change', (e) => {
             const selectedName = e.target.value;
