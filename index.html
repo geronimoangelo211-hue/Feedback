@@ -955,6 +955,42 @@
                 offlineMessage.style.display = 'block';
             }
         });
+
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            if (!isCaptchaSolved) {
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = "Please complete the puzzle first.";
+                return;
+            }
+
+            errorMsg.style.display = 'none';
+
+            const formData = new FormData(form);
+            const name = formData.get('name') || "Anonymous";
+            const rating = parseInt(formData.get('rating'));
+            const message = formData.get('message');
+            
+            const isEmployeeTabActive = btnEmployeePerf.classList.contains('active');
+            const employeeName = isEmployeeTabActive ? formData.get('employeeName') : "";
+
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-US') + ' ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentServerId = urlParams.get('serverId') || 'DEFAULT_SRV';
+
+            const feedbackData = {
+                name: name,
+                rating: rating,
+                message: message,
+                date: dateStr,
+                employeeName: employeeName,
+                serverId: currentServerId 
+            };
+
+        
     </script>
 </body>
 </html>
