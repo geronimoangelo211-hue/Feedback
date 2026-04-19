@@ -40,9 +40,10 @@
         }
         .logo-container img {
             max-width: 90px; 
-            height: auto;
+            height: 90px; /* Fixed height for uniformity */
             object-fit: contain;
             animation: idleLogo 4s ease-in-out infinite;
+            border-radius: 8px; /* Added slight rounding if it's a square logo */
         }
         
         /* --- BIG SQUARE BUTTONS UI --- */
@@ -385,7 +386,7 @@
 
     <div class="feedback-container">
         <div class="logo-container">
-            <img src="Images/Logo.png" alt="Company Logo" onerror="this.style.display='none'">
+            <img id="feedbackCompanyLogo" src="Images/Logo.png" alt="Company Logo" onerror="this.style.display='none'">
         </div>
 
         <div id="loadingMessage" class="loading-message" style="display: block;">
@@ -514,6 +515,18 @@
         const urlParams = new URLSearchParams(window.location.search);
         const currentServerId = urlParams.get('serverId') || 'DEFAULT_SRV';
         const targetUsername = urlParams.get('employeeUsername');
+
+        // ---- NEW: DYNAMIC LOGO INJECTION ----
+        try {
+            const imsServers = JSON.parse(localStorage.getItem('ims_servers')) || [];
+            const serverInfo = imsServers.find(s => s.id === currentServerId);
+            if (serverInfo && serverInfo.logo) {
+                document.getElementById('feedbackCompanyLogo').src = serverInfo.logo;
+            }
+        } catch (e) {
+            console.error("Could not load dynamic logo", e);
+        }
+        // -------------------------------------
 
         const reactionImage = document.getElementById('reactionImage');
         const starLabels = document.querySelectorAll('.rating-group label');
@@ -700,7 +713,6 @@
                     employeeNameSelect.innerHTML = '<option value="">-- Please select an employee --</option>';
 
                     availableEmployees.forEach(u => {
-                        // FIXED: Strictly exclude the 'Admin' account from ever showing up in the list
                         if (u.status !== 'UNVERIFIED' && u.username.toUpperCase() !== 'ADMIN') { 
                             const name = (u.fullName && u.fullName !== 'N/A' && u.fullName !== 'undefined') ? u.fullName : u.username;
                             const option = document.createElement('option');
