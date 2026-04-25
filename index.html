@@ -32,6 +32,10 @@
         .logo-container {
             text-align: center;
             margin-bottom: 10px; 
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         @keyframes idleLogo {
             0% { transform: translateY(0) scale(1); }
@@ -40,10 +44,19 @@
         }
         .logo-container img {
             max-width: 90px; 
-            height: 90px; /* Fixed height for uniformity */
+            height: 90px; 
             object-fit: contain;
             animation: idleLogo 4s ease-in-out infinite;
-            border-radius: 8px; /* Added slight rounding if it's a square logo */
+            border-radius: 8px; 
+        }
+        #feedbackCompanyText {
+            display: none;
+            color: #111;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            text-align: center;
         }
         
         /* --- BIG SQUARE BUTTONS UI --- */
@@ -385,8 +398,10 @@
 <body>
 
     <div class="feedback-container">
+        
         <div class="logo-container">
             <img id="feedbackCompanyLogo" src="Images/Logo.png" alt="Company Logo" onerror="this.style.display='none'">
+            <h1 id="feedbackCompanyText"></h1>
         </div>
 
         <div id="loadingMessage" class="loading-message" style="display: block;">
@@ -515,16 +530,35 @@
         const urlParams = new URLSearchParams(window.location.search);
         const currentServerId = urlParams.get('serverId') || 'DEFAULT_SRV';
         const targetUsername = urlParams.get('employeeUsername');
+        const urlServerName = urlParams.get('serverName'); // NEW URL PARAM
 
-        // ---- NEW: DYNAMIC LOGO INJECTION ----
-        try {
-            const imsServers = JSON.parse(localStorage.getItem('ims_servers')) || [];
-            const serverInfo = imsServers.find(s => s.id === currentServerId);
-            if (serverInfo && serverInfo.logo) {
-                document.getElementById('feedbackCompanyLogo').src = serverInfo.logo;
+        // ---- NEW: BULLETPROOF DYNAMIC LOGO/TEXT INJECTION ----
+        const logoImg = document.getElementById('feedbackCompanyLogo');
+        const textHeader = document.getElementById('feedbackCompanyText');
+
+        // 1. Mobile Device Fallback: Display the Server Name as text if it's passed in the URL
+        if (urlServerName) {
+            logoImg.style.display = 'none';
+            textHeader.textContent = decodeURIComponent(urlServerName);
+            textHeader.style.display = 'block';
+        } 
+        // 2. Admin PC check: If testing on localhost, grab from localStorage
+        else {
+            try {
+                const imsServers = JSON.parse(localStorage.getItem('ims_servers')) || [];
+                const serverInfo = imsServers.find(s => s.id === currentServerId);
+                if (serverInfo) {
+                    if (serverInfo.logo && serverInfo.logo !== 'Images/Logo.png') {
+                        logoImg.src = serverInfo.logo;
+                    } else if (serverInfo.name) {
+                        logoImg.style.display = 'none';
+                        textHeader.textContent = serverInfo.name;
+                        textHeader.style.display = 'block';
+                    }
+                }
+            } catch (e) {
+                console.error("Could not load dynamic logo", e);
             }
-        } catch (e) {
-            console.error("Could not load dynamic logo", e);
         }
         // -------------------------------------
 
@@ -986,36 +1020,6 @@
         window.addEventListener('touchmove', onDragMove, {passive: false});
         window.addEventListener('mouseup', onDragEnd);
         window.addEventListener('touchend', onDragEnd);
-
-        window.addEventListener('load', async () => {
-            const privateMode = await isIncognito();
-            if (privateMode) {
-                loadingMessage.style.display = 'none';
-                document.getElementById('incognitoMessage').style.display = 'block';
-                return;
-            }
-
-            if (checkCooldown()) return;
-
-            const isOnline = await checkServerStatus();
-            if (isOnline) {
-                await loadEmployeesForDropdown();
-                loadingMessage.style.display = 'none';
-
-                selectionScreen.style.display = 'block';
-                form.style.display = 'none';
-
-                if (targetUsername && targetUsername.toUpperCase() !== 'ADMIN') {
-                    const emp = availableEmployees.find(u => (u.username === targetUsername || u.fullName === targetUsername) && u.username.toUpperCase() !== 'ADMIN');
-                    
-                    if (emp) {
-                        const displayName = (emp.fullName && emp.fullName !== 'N/A' && emp.fullName !== 'undefined') ? emp.fullName : emp.username;
-                        employeeNameSelect.value = displayName;
-                        employeeNameSelect.dispatchEvent(new Event('change'));
-                    }
-                }
-            }
-        });
 
         let lastWindowWidth = window.innerWidth;
         window.addEventListener('resize', () => {
